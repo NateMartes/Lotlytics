@@ -1,6 +1,7 @@
 matplotlib
-skimage
+scikit-image
 filterpy
 ultralytics
-cv2
+opencv-python
 numpy
+toml

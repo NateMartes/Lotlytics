@@ -4,15 +4,7 @@ import cv2
 import sys
 import numpy as np
 import math
-
-MODEL_PATH = 'yolov8n.pt'
-CONFIDENCE_PERCENTAGE = 0.70
-KEEP_ALIVE_FRAMES = 30
-MINIUMN_FRAMES_BEFORE_DETECION = 3
-IOU_THRESHOLD = 0.50
-VALID_OBJECTS = ["person", "car", "motorbike","bus","truck"]
-LINE_GAP = 500
-LINE_START = 100
+import toml
 
 class Camera:
     def __init__(self, name, width=640, height=480):
@@ -41,9 +33,10 @@ class Camera:
 class ObjectTracker:
     def __init__(self, keep_alive_frames, min_hits, iou_threshold):
         self.tracker = Sort(max_age=keep_alive_frames, min_hits=min_hits, iou_threshold=iou_threshold)
-        self.line_a_objs = set()
-        self.line_b_objs = set()
+        self.line_a_objs = {}
+        self.line_b_objs = {}
         self.volume = 0
+        self.keep_alive_frames = keep_alive_frames
 
     def update_objs_in_line_storage(self, objects):
         for track_id, line in objects:
@@ -51,17 +44,37 @@ class ObjectTracker:
                 if track_id in self.line_b_objs:
                     # Send Data: Entering
                     self.volume += 1
-                    self.line_b_objs.remove(track_id)
+                    self.line_b_objs.pop(track_id)
                     pass
                 else:
-                    self.line_a_objs.add(track_id)
+                    self.line_a_objs[track_id] = self.keep_alive_frames
             elif line == 'B':
                 if track_id in self.line_a_objs:
                     # Send Data: Leaving
-                    self.line_a_objs.remove(track_id)
                     self.volume -= 1
+                    self.line_a_objs.pop(track_id)
                 else:
-                    self.line_b_objs.add(track_id)
+                    self.line_b_objs[track_id] = self.keep_alive_frames
+
+    def adjust_alive_time_line_sets(self, tracked_objects):
+        for _, _, _, _, track_id in tracked_objects:
+            if track_id in self.line_a_objs:
+                self.line_a_objs[track_id] = self.keep_alive_frames
+            if track_id in self.line_b_objs:
+                self.line_b_objs[track_id] = self.keep_alive_frames
+
+        line_a_objs_keys = self.line_a_objs.copy().keys()
+        line_b_objs_keys = self.line_b_objs.copy().keys()
+
+        for track_id in line_a_objs_keys:
+            self.line_a_objs[track_id] -= 1
+            if self.line_a_objs[track_id] <= 0:
+                self.line_a_objs.pop(track_id)
+
+        for track_id in line_b_objs_keys:
+            self.line_b_objs[track_id] -= 1
+            if self.line_b_objs[track_id] <= 0:
+                self.line_b_objs.pop(track_id)
 
 class VolumeAgent:
     def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, mode="production", exit_key='q'):
@@ -128,8 +141,8 @@ class VolumeAgent:
     
     def _get_intersecting_objects(self, tracked_objects):
             output = []
-            line_A_x1y1 = (LINE_START, 0)
-            line_B_x1y1 = (LINE_START + LINE_GAP, 0)
+            line_A_x1y1 = (self.line_start, 0)
+            line_B_x1y1 = (self.line_start + self.line_gap, 0)
             for x1, y1, x2, y2, track_id in tracked_objects:
                 track_id = int(track_id)
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
@@ -155,9 +168,12 @@ class VolumeAgent:
             detection_results = self.model(frame, stream=True)
             detections = self._gather_detections(detection_results)
             tracked_objects = self._update_tracked_items(detections)
+            self.obj_tracker.adjust_alive_time_line_sets(tracked_objects)
             intersecting_objects = self._get_intersecting_objects(tracked_objects)
             self.obj_tracker.update_objs_in_line_storage(intersecting_objects)
             print(self.obj_tracker.volume)
+            print(self.obj_tracker.line_a_objs)
+            print(self.obj_tracker.line_b_objs)
             if not self.mode == "production":
                 self._draw_debug_data(frame, tracked_objects)
 
@@ -165,16 +181,18 @@ class VolumeAgent:
 
 if __name__ == "__main__":
 
+    config = toml.load("config.toml")
+    
     agent = VolumeAgent(
-        objects=VALID_OBJECTS,
-        confidence=CONFIDENCE_PERCENTAGE,
-        model_path=MODEL_PATH,
-        keep_alive_frames=KEEP_ALIVE_FRAMES,
-        min_hits=MINIUMN_FRAMES_BEFORE_DETECION,
-        iou_threshold=IOU_THRESHOLD,
-        line_start=LINE_START,
-        line_gap=LINE_GAP,
-        mode="testing",
+        objects=config["valid_objects"],
+        confidence=float(config["confidence_percentage"]),
+        model_path=config["model_path"],
+        keep_alive_frames=int(config["keep_alive_frames"]),
+        min_hits=int(config["minuiumn_frames_before_detecion"]),
+        iou_threshold=float(config["iou_threshold"]),
+        line_start=int(config["line_start"]),
+        line_gap=int(config["line_gap"]),
+        mode=config["mode"],
     )
     
     agent.run()
