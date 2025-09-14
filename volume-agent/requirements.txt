@@ -1,0 +1,6 @@
+matplotlib
+skimage
+filterpy
+ultralytics
+cv2
+numpy
