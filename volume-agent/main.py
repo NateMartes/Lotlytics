@@ -41,6 +41,27 @@ class Camera:
 class ObjectTracker:
     def __init__(self, keep_alive_frames, min_hits, iou_threshold):
         self.tracker = Sort(max_age=keep_alive_frames, min_hits=min_hits, iou_threshold=iou_threshold)
+        self.line_a_objs = set()
+        self.line_b_objs = set()
+        self.volume = 0
+
+    def update_objs_in_line_storage(self, objects):
+        for track_id, line in objects:
+            if line == 'A':
+                if track_id in self.line_b_objs:
+                    # Send Data: Entering
+                    self.volume += 1
+                    self.line_b_objs.remove(track_id)
+                    pass
+                else:
+                    self.line_a_objs.add(track_id)
+            elif line == 'B':
+                if track_id in self.line_a_objs:
+                    # Send Data: Leaving
+                    self.line_a_objs.remove(track_id)
+                    self.volume -= 1
+                else:
+                    self.line_b_objs.add(track_id)
 
 class VolumeAgent:
     def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, mode="production", exit_key='q'):
@@ -114,10 +135,10 @@ class VolumeAgent:
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                 if self._is_intersecting_with_line((x1, y1), (x2, y2), line_A_x1y1):
                     if not self._is_intersecting_with_line((x1, y1), (x2, y2), line_B_x1y1):
-                        output.append([x1, y1, x2, y2, track_id, 'A'])
+                        output.append((track_id, 'A'))
                 elif self._is_intersecting_with_line((x1, y1), (x2, y2), line_B_x1y1):
                     if not self._is_intersecting_with_line((x1, y1), (x2, y2), line_A_x1y1):
-                        output.append([x1, y1, x2, y2, track_id, 'B'])
+                        output.append((track_id, 'B'))
             
             return output
 
@@ -135,7 +156,8 @@ class VolumeAgent:
             detections = self._gather_detections(detection_results)
             tracked_objects = self._update_tracked_items(detections)
             intersecting_objects = self._get_intersecting_objects(tracked_objects)
-            print(intersecting_objects)
+            self.obj_tracker.update_objs_in_line_storage(intersecting_objects)
+            print(self.obj_tracker.volume)
             if not self.mode == "production":
                 self._draw_debug_data(frame, tracked_objects)
 
