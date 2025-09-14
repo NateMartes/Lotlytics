@@ -1,0 +1,26 @@
+# production or testing
+mode = "testing"
+
+# Objects to be recongized. Objects can added from the COCO dataset https://docs.ultralytics.com/datasets/detect/coco/
+valid_objects = ["person", "car", "motorbike","bus","truck"]
+
+# Where the model is store on the filesystem
+model_path = "./yolov8n.pt"
+
+# Confidence percentage to accept objects at
+confidence_percentage = "0.70"
+
+# Keep alive frames are how many frames are allowed for the object not to be seen before it is forgotten
+keep_alive_frames = 30
+
+# Miniumn frames before detection is how many frames before an object is acknowledged
+minuiumn_frames_before_detecion = 3
+
+# IOU Threshold is how different the objects should be before it is consider a new object
+iou_threshold = 0.50
+
+# Line start is the pixel where the first line should start to record volume
+line_start = 100
+
+# Line gap is the gap between the 2 lines. This means that if line 1 is at 100px, and the gap is 500, then line 2 would be at 600px
+line_gap = 500
