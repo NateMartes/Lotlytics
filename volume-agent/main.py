@@ -1,11 +1,31 @@
 from ultralytics import YOLO
 from sort import Sort
+from sort import KalmanBoxTracker
+from datetime import datetime, timezone
 import cv2
 import sys
 import numpy as np
 import math
 import toml
 import logging
+
+# Temporary storage of data since the storage DNE
+events = []
+
+def send_to_sever(value, group_name):
+    """
+    The send_to_server method sends an increment or decrement to the volume of this area.
+    Args:
+        value: Either 1 or -1 to increment or decrement.
+        group_name: The group name this agent is apart of.
+    """
+    capture_time = datetime.now(timezone.utc)
+    data = {
+        "captured_at": str(capture_time),
+        "value": value,
+        "group": group_name
+    }
+    events.append(data)
 
 class Camera:
     def __init__(self, name, width=640, height=640):
@@ -59,19 +79,21 @@ class Camera:
         cv2.destroyAllWindows()
     
 class ObjectTracker:
-    def __init__(self, keep_alive_frames, min_hits, iou_threshold):
+    def __init__(self, keep_alive_frames, min_hits, iou_threshold, group_name):
         """
         The ObjectTracker class handles objects based on detections from the ML model.
         Args:
             keep_alive_frames: The amount of frames to go without seeing an object before considering it to be gone.
             min_hits: The amount of miniumn to see a specifc object before considering it to exist.
             iou_threshold: The percentage of difference between objects before consider it to be a new object.
+            group_name: The name of the group this agent is apart of.
         """
         self.tracker = Sort(max_age=keep_alive_frames, min_hits=min_hits, iou_threshold=iou_threshold)
         self.line_a_objs = {}
         self.line_b_objs = {}
         self.volume = 0
         self.keep_alive_frames = keep_alive_frames
+        self.group_name = group_name
 
     def update_objs_in_line_storage(self, objects):
         """
@@ -85,7 +107,7 @@ class ObjectTracker:
             if line == 'A':
                 if track_id in self.line_b_objs:
                     # Send Data: Entering
-                    self.volume += 1
+                    send_to_sever(1, self.group_name)
                     self.line_b_objs.pop(track_id)
                     pass
                 else:
@@ -93,7 +115,7 @@ class ObjectTracker:
             elif line == 'B':
                 if track_id in self.line_a_objs:
                     # Send Data: Leaving
-                    self.volume -= 1
+                    send_to_sever(-1, self.group_name)
                     self.line_a_objs.pop(track_id)
                 else:
                     self.line_b_objs[track_id] = self.keep_alive_frames
@@ -124,8 +146,12 @@ class ObjectTracker:
             if self.line_b_objs[track_id] <= 0:
                 self.line_b_objs.pop(track_id)
 
+        # Reset track ids to prevent memory leak
+        if KalmanBoxTracker.count > 100 and (not self.line_a_objs and not self.line_b_objs):
+            KalmanBoxTracker.count = 0
+
 class VolumeAgent:
-    def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, mode="production", exit_key='q'):
+    def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, group_name, mode="production", exit_key='q'):
         """
         The VolumeAgent class keeps track of the list of objects it has seen an agggreates the result.
         Args:
@@ -137,6 +163,7 @@ class VolumeAgent:
             iou_threshold: The percentage of difference between objects before consider it to be a new object.
             line_start: The pixel to start the first line.
             line_gap: The distance between both lines on the camera.
+            group_name: The group name this agent is apart of.
             mode: The current mode of the VolumeAgent.
             exit_key: The key to press to exit the camera debugger
         """
@@ -144,7 +171,7 @@ class VolumeAgent:
         self.confidence = confidence
         self.camera = Camera(name="Volume Agent")
         self.model = YOLO(model_path)
-        self.obj_tracker = ObjectTracker(keep_alive_frames, min_hits, iou_threshold)
+        self.obj_tracker = ObjectTracker(keep_alive_frames, min_hits, iou_threshold, group_name)
         self.line_gap = line_gap
         self.line_start = line_start
         self.mode = mode
@@ -196,7 +223,7 @@ class VolumeAgent:
                 class_name = self.model.names[class_id]
                 if class_name in self.objects and confidence > self.confidence:
                     if not self.mode == "production":
-                        self.logger.error(f"Detected {class_name} at ({x1},{y1}) ({x2},{y2}) with confidence {confidence}")
+                        self.logger.info(f"Detected {class_name} at ({x1},{y1}) ({x2},{y2}) with confidence {confidence}")
                     detections.append([x1, y1, x2, y2, confidence])
 
         return detections
@@ -275,7 +302,7 @@ class VolumeAgent:
         while True:
             success, frame = self.camera.get_frame()
             if not success:
-                print("Error: Failed to get frame", file=sys.stderr)
+                self.logger.error("Error: Failed to get frame", file=sys.stderr)
                 break
 
             if cv2.waitKey(1) & 0xFF == ord(self.exit_key):
@@ -292,6 +319,7 @@ class VolumeAgent:
                 self.logger.info(f"Current Object Volume {self.obj_tracker.volume}")
                 self.logger.info(f"Objects who have crossed line A {self.obj_tracker.line_a_objs}")
                 self.logger.info(f"Objects who have crossed line B {self.obj_tracker.line_b_objs}")
+                self.logger.info(f"Events: {events}")
 
         self.camera.shutdown()
 
@@ -310,6 +338,7 @@ if __name__ == "__main__":
         iou_threshold=float(config["iou_threshold"]),
         line_start=int(config["line_start"]),
         line_gap=int(config["line_gap"]),
+        group_name=config["group"],
         mode=config["mode"],
     )
     agent.run()

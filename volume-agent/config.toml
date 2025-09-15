@@ -24,3 +24,9 @@ line_start = 100
 
 # Line gap is the gap between the 2 lines. This means that if line 1 is at 100px, and the gap is 500, then line 2 would be at 600px
 line_gap = 500
+
+# Location of where to send data to over https
+data_server = ""
+
+# The group this agent is apart of
+group = "group-a"
