@@ -5,9 +5,18 @@ import sys
 import numpy as np
 import math
 import toml
+import logging
 
 class Camera:
-    def __init__(self, name, width=640, height=480):
+    def __init__(self, name, width=640, height=640):
+        """
+        The Camera class is used to gather camera data from the system's default camera.
+
+        Args:
+            name: The name of the camera window.
+            width: The width of the camera window.
+            height: The height of the camera window.
+        """
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             print("Error: Could not open Camera", file=sys.stderr)
@@ -18,20 +27,46 @@ class Camera:
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         
     def get_frame(self):
+        """
+        The get_frame method returns the a frame from the camera.
+        """
         return self.cap.read()
     
     def draw_vertical_line(self, frame, line_color, starting_point, ending_point):
+        """
+        The draw_vertical_line method draws a line on a given frame.
+        Args:
+            frame: The frame to draw on.
+            line_color: The color to paint the line.
+            starting_point: The first point of the line (x1, y1).
+            ending_point: The last point of the line (x2, y2).
+        """
         cv2.line(frame, starting_point, ending_point, line_color, 5)
 
     def display_camera_frame(self, frame):
+        """
+        The display_camera_frame shows a given camera frame to a window.
+        Args:
+            frame: The frame to show to the screen.
+        """
         cv2.imshow(self.name, frame)
 
     def shutdown(self):
+        """
+        The shutdown method is used to clean up resources used by the camera.
+        """
         self.cap.release()
         cv2.destroyAllWindows()
     
 class ObjectTracker:
     def __init__(self, keep_alive_frames, min_hits, iou_threshold):
+        """
+        The ObjectTracker class handles objects based on detections from the ML model.
+        Args:
+            keep_alive_frames: The amount of frames to go without seeing an object before considering it to be gone.
+            min_hits: The amount of miniumn to see a specifc object before considering it to exist.
+            iou_threshold: The percentage of difference between objects before consider it to be a new object.
+        """
         self.tracker = Sort(max_age=keep_alive_frames, min_hits=min_hits, iou_threshold=iou_threshold)
         self.line_a_objs = {}
         self.line_b_objs = {}
@@ -39,6 +74,13 @@ class ObjectTracker:
         self.keep_alive_frames = keep_alive_frames
 
     def update_objs_in_line_storage(self, objects):
+        """
+        The update_objs_in_line_storage updates objects based on the line they intersect with on the camera.
+        If an object moves from one line to the next, an intercemnt happens. Vise versa for the other direction.
+        No operation occurs when an object intersects with both lines.
+        Args:
+            objects: The current list of seen objects
+        """
         for track_id, line in objects:
             if line == 'A':
                 if track_id in self.line_b_objs:
@@ -57,6 +99,12 @@ class ObjectTracker:
                     self.line_b_objs[track_id] = self.keep_alive_frames
 
     def adjust_alive_time_line_sets(self, tracked_objects):
+        """
+        The adjust_alive_time_line_sets updates the objects in memory to remove old entires of objects that no longer exist.
+        Object that have not been seen for more than the keep_alive_frames are discarded.
+        Args:
+            objects: The current list of seen objects
+        """
         for _, _, _, _, track_id in tracked_objects:
             if track_id in self.line_a_objs:
                 self.line_a_objs[track_id] = self.keep_alive_frames
@@ -78,6 +126,20 @@ class ObjectTracker:
 
 class VolumeAgent:
     def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, mode="production", exit_key='q'):
+        """
+        The VolumeAgent class keeps track of the list of objects it has seen an agggreates the result.
+        Args:
+            objects: The list of object names to look out for.
+            confidence: If object detection is below the confidence score, the object is discarded.
+            model_path: The path to the YOLO ML model.
+            keep_alive_frames: The amount of frames to go without seeing an object before considering it to be gone.
+            min_hits: The amount of miniumn to see a specifc object before considering it to exist.
+            iou_threshold: The percentage of difference between objects before consider it to be a new object.
+            line_start: The pixel to start the first line.
+            line_gap: The distance between both lines on the camera.
+            mode: The current mode of the VolumeAgent.
+            exit_key: The key to press to exit the camera debugger
+        """
         self.objects = objects
         self.confidence = confidence
         self.camera = Camera(name="Volume Agent")
@@ -91,16 +153,40 @@ class VolumeAgent:
             exit(1)
         self.exit_key = exit_key
 
+        format_string = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        logging.basicConfig(
+            level=logging.INFO,
+            format=format_string,
+            handlers=[logging.StreamHandler()]
+        )
+        self.logger = logging.getLogger("volume-agent")
+
+        if not mode == "production":
+            self.logger.info(f"Volume Agent creatd with YOLO model {model_path} and confidence level {self.confidence}. Looking out for {self.objects}")
+
     def _draw_debug_lines(self, frame, line_color=(0, 0, 255)):
+        """
+        The _draw_debug_lines is a private method that draws the lines objects intersect with onto the camera.
+        Args:
+            frame: The frame to draw the lines on.
+            line_color: The color of the lines to be.
+        """
         height, width = frame.shape[:2]
         val = self.line_start + self.line_gap
         if width < val:
-            print(f"Error: Location of ending line out of bounds from frame. {val} > {width} (Frame Width)", file=sys.stderr)
+            self.logger.error(f"Error: Location of ending line out of bounds from frame. {val} > {width} (Max Camera Width)")
             exit(1)
         self.camera.draw_vertical_line(frame, line_color, (self.line_start, 0), (self.line_start, height))
         self.camera.draw_vertical_line(frame, line_color, (val, 0), (val, height))
 
     def _gather_detections(self, detection_results):
+        """
+        The _gather_detections method is a private method use to gather the number of objects found in a specifc frame.
+        Args:
+            detection_results: The raw results from the ML model. This may contain objects we do not care for.
+        Returns:
+            An array of objects that fit within the confidence score and object list.
+        """
         detections = []
         for result in detection_results:
             for box in result.boxes:
@@ -110,52 +196,82 @@ class VolumeAgent:
                 class_name = self.model.names[class_id]
                 if class_name in self.objects and confidence > self.confidence:
                     if not self.mode == "production":
-                        print(f"Detected {class_name} at ({x1},{y1}) ({x2},{y2}) with confidence {confidence}")
+                        self.logger.error(f"Detected {class_name} at ({x1},{y1}) ({x2},{y2}) with confidence {confidence}")
                     detections.append([x1, y1, x2, y2, confidence])
 
         return detections
 
     def _update_tracked_items(self, detections):
-            if len(detections) > 0:
-                detections_np = np.array(detections)
-            else:
-                detections_np = np.empty((0, 5))
+        """
+        The _update_tracked_items is a private method that updates the list of objects we are storing. 
+        Args:
+            The list of objects that were detected.
+        """
+        if len(detections) > 0:
+            detections_np = np.array(detections)
+        else:
+            detections_np = np.empty((0, 5))
 
-            # Update SORT tracker
-            return self.obj_tracker.tracker.update(detections_np)
+        return self.obj_tracker.tracker.update(detections_np)
 
     def _draw_debug_data(self, frame, tracked_objects):
-            self._draw_debug_lines(frame)
-            for x1, y1, x2, y2, track_id in tracked_objects:
-                track_id = int(track_id)
-                cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-                cv2.putText(frame, f"track_id: {track_id}", (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        """
+        The _draw_debug_data is a private method that draws the camera to the screen along with debug information.
+        Args:
+            frame: The frame to draw the debug data to.
+            tracked_objects: The objects to add debug data to on the screen.
+        """
+        self._draw_debug_lines(frame)
+        for x1, y1, x2, y2, track_id in tracked_objects:
+            track_id = int(track_id)
+            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+            cv2.putText(frame, f"track_id: {track_id}", (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-            self.camera.display_camera_frame(frame)
+        self.camera.display_camera_frame(frame)
     
     def _is_intersecting_with_line(self, obj_x1y1, obj_x2y2, line_x1y1):
+        """
+        Determines if an object is intersection with a given line's x coordinate.
+        Args:
+            obj_x1y1: A tuple of the first x and y coordiante of the object.
+            obj_x2y2: A tuple of the second x and y coordiante of the object.
+            line_x1y1: A tuple of the first x andy coordinate of the object.
+        Returns:
+            If the object intersects, this returns true. Otherwise, false.
+        """
         obj_x1, _ = obj_x1y1
         obj_x2, _ = obj_x2y2
         line_x, _= line_x1y1
         return obj_x1 <= line_x <= obj_x2
     
     def _get_intersecting_objects(self, tracked_objects):
-            output = []
-            line_A_x1y1 = (self.line_start, 0)
-            line_B_x1y1 = (self.line_start + self.line_gap, 0)
-            for x1, y1, x2, y2, track_id in tracked_objects:
-                track_id = int(track_id)
-                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-                if self._is_intersecting_with_line((x1, y1), (x2, y2), line_A_x1y1):
-                    if not self._is_intersecting_with_line((x1, y1), (x2, y2), line_B_x1y1):
-                        output.append((track_id, 'A'))
-                elif self._is_intersecting_with_line((x1, y1), (x2, y2), line_B_x1y1):
-                    if not self._is_intersecting_with_line((x1, y1), (x2, y2), line_A_x1y1):
-                        output.append((track_id, 'B'))
-            
-            return output
+        """
+        The _get_intersecting_objects method takes the tracked objects and returns only the ones intersecting with only one line.
+        Args:
+            tracked_objects: The objects to check for intersection.
+        Returns:
+            A list containg the id of the object along with the line it is intersecting with (either A or B)
+        """
+        output = []
+        line_A_x1y1 = (self.line_start, 0)
+        line_B_x1y1 = (self.line_start + self.line_gap, 0)
+        for x1, y1, x2, y2, track_id in tracked_objects:
+            track_id = int(track_id)
+            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+            if self._is_intersecting_with_line((x1, y1), (x2, y2), line_A_x1y1):
+                if not self._is_intersecting_with_line((x1, y1), (x2, y2), line_B_x1y1):
+                    output.append((track_id, 'A'))
+            elif self._is_intersecting_with_line((x1, y1), (x2, y2), line_B_x1y1):
+                if not self._is_intersecting_with_line((x1, y1), (x2, y2), line_A_x1y1):
+                    output.append((track_id, 'B'))
+        
+        return output
 
     def run(self):
+        """
+        The run method executes the volume agent into a long running process to keep track of the volume of object it
+        sees pass over 2 lines.
+        """
         while True:
             success, frame = self.camera.get_frame()
             if not success:
@@ -171,18 +287,20 @@ class VolumeAgent:
             self.obj_tracker.adjust_alive_time_line_sets(tracked_objects)
             intersecting_objects = self._get_intersecting_objects(tracked_objects)
             self.obj_tracker.update_objs_in_line_storage(intersecting_objects)
-            print(self.obj_tracker.volume)
-            print(self.obj_tracker.line_a_objs)
-            print(self.obj_tracker.line_b_objs)
             if not self.mode == "production":
                 self._draw_debug_data(frame, tracked_objects)
+                self.logger.info(f"Current Object Volume {self.obj_tracker.volume}")
+                self.logger.info(f"Objects who have crossed line A {self.obj_tracker.line_a_objs}")
+                self.logger.info(f"Objects who have crossed line B {self.obj_tracker.line_b_objs}")
 
         self.camera.shutdown()
 
 if __name__ == "__main__":
 
-    config = toml.load("config.toml")
+    # Make YOLO quiet
+    logging.getLogger("ultralytics").setLevel(logging.ERROR)
     
+    config = toml.load("config.toml")
     agent = VolumeAgent(
         objects=config["valid_objects"],
         confidence=float(config["confidence_percentage"]),
@@ -194,5 +312,4 @@ if __name__ == "__main__":
         line_gap=int(config["line_gap"]),
         mode=config["mode"],
     )
-    
     agent.run()
