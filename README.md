@@ -1,2 +1,2 @@
-# WilkesSpot
-Tracking Parking Volumes throughout University | W.I.P
+# Lotlytics
+Tracking Parking Volumes throughout locations | W.I.P
