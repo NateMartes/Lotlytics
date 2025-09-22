@@ -320,7 +320,6 @@ class VolumeAgent:
                 self.logger.info(f"Objects who have crossed line A {self.obj_tracker.line_a_objs}")
                 self.logger.info(f"Objects who have crossed line B {self.obj_tracker.line_b_objs}")
                 self.logger.info(f"Events: {events}")
-
         self.camera.shutdown()
 
 if __name__ == "__main__":

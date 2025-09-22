@@ -1,7 +1,7 @@
-matplotlib
-scikit-image
-filterpy
-ultralytics
-opencv-python
-numpy
-toml
+matplotlib==3.10.6
+scikit-image==0.24.0
+filterpy==1.4.5
+ultralytics==8.3.199
+opencv-python==4.12.0.88
+numpy==2.2.6
+toml==0.10.2

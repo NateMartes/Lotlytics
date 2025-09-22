@@ -1,0 +1,8 @@
+services:
+  volume-agent:
+    image: volume-agent:latest
+    build:
+      context: .
+    devices:
+      - "/dev/video0:/dev/video0"
+      - "/dev/video1:/dev/video1"
