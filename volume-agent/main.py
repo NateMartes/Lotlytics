@@ -8,24 +8,8 @@ import numpy as np
 import math
 import toml
 import logging
+import requests
 
-# Temporary storage of data since the storage DNE
-events = []
-
-def send_to_sever(value, group_name):
-    """
-    The send_to_server method sends an increment or decrement to the volume of this area.
-    Args:
-        value: Either 1 or -1 to increment or decrement.
-        group_name: The group name this agent is apart of.
-    """
-    capture_time = datetime.now(timezone.utc)
-    data = {
-        "captured_at": str(capture_time),
-        "value": value,
-        "group": group_name
-    }
-    events.append(data)
 
 class Camera:
     def __init__(self, name, width=640, height=640):
@@ -79,7 +63,7 @@ class Camera:
         cv2.destroyAllWindows()
     
 class ObjectTracker:
-    def __init__(self, keep_alive_frames, min_hits, iou_threshold, group_name):
+    def __init__(self, keep_alive_frames, min_hits, iou_threshold, group_name, server):
         """
         The ObjectTracker class handles objects based on detections from the ML model.
         Args:
@@ -94,6 +78,23 @@ class ObjectTracker:
         self.volume = 0
         self.keep_alive_frames = keep_alive_frames
         self.group_name = group_name
+        self.server = server
+
+    def _send_to_sever(self, value):
+        """
+        The _send_to_server method sends an increment or decrement to the volume of this area.
+        Args:
+            value: Either 1 or -1 to increment or decrement.
+            group_name: The group name this agent is apart of.
+        """
+        capture_time = datetime.now(timezone.utc)
+        data = {
+            "captured_at": str(capture_time),
+            "value": value,
+            "group": self.group_name
+        }
+
+        # requests.post(self.server, data=data)
 
     def update_objs_in_line_storage(self, objects):
         """
@@ -107,7 +108,7 @@ class ObjectTracker:
             if line == 'A':
                 if track_id in self.line_b_objs:
                     # Send Data: Entering
-                    send_to_sever(1, self.group_name)
+                    self._send_to_sever(1)
                     self.line_b_objs.pop(track_id)
                     pass
                 else:
@@ -115,7 +116,7 @@ class ObjectTracker:
             elif line == 'B':
                 if track_id in self.line_a_objs:
                     # Send Data: Leaving
-                    send_to_sever(-1, self.group_name)
+                    self._send_to_sever(-1)
                     self.line_a_objs.pop(track_id)
                 else:
                     self.line_b_objs[track_id] = self.keep_alive_frames
@@ -151,7 +152,7 @@ class ObjectTracker:
             KalmanBoxTracker.count = 0
 
 class VolumeAgent:
-    def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, group_name, mode="production", exit_key='q'):
+    def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, group_name, server, mode="production", exit_key='q'):
         """
         The VolumeAgent class keeps track of the list of objects it has seen an agggreates the result.
         Args:
@@ -164,6 +165,7 @@ class VolumeAgent:
             line_start: The pixel to start the first line.
             line_gap: The distance between both lines on the camera.
             group_name: The group name this agent is apart of.
+            server: URI to send event data to.
             mode: The current mode of the VolumeAgent.
             exit_key: The key to press to exit the camera debugger
         """
@@ -171,9 +173,11 @@ class VolumeAgent:
         self.confidence = confidence
         self.camera = Camera(name="Volume Agent")
         self.model = YOLO(model_path)
-        self.obj_tracker = ObjectTracker(keep_alive_frames, min_hits, iou_threshold, group_name)
+        self.obj_tracker = ObjectTracker(keep_alive_frames, min_hits, iou_threshold, group_name, server)
         self.line_gap = line_gap
         self.line_start = line_start
+        self.group_name = group_name
+        self.sever = server
         self.mode = mode
         if not exit_key.isalpha():
             print(f"Error: exit key is not valid. Expected alpha numeric key, got {exit_key}", file=sys.stderr)
@@ -319,7 +323,6 @@ class VolumeAgent:
                 self.logger.info(f"Current Object Volume {self.obj_tracker.volume}")
                 self.logger.info(f"Objects who have crossed line A {self.obj_tracker.line_a_objs}")
                 self.logger.info(f"Objects who have crossed line B {self.obj_tracker.line_b_objs}")
-                self.logger.info(f"Events: {events}")
         self.camera.shutdown()
 
 if __name__ == "__main__":
@@ -338,6 +341,7 @@ if __name__ == "__main__":
         line_start=int(config["line_start"]),
         line_gap=int(config["line_gap"]),
         group_name=config["group"],
+        server=config["data_server"],
         mode=config["mode"],
     )
     agent.run()

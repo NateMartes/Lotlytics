@@ -1,5 +1,5 @@
 # production or testing
-mode = "production"
+mode = "testing"
 
 # Objects to be recongized. Objects can added from the COCO dataset https://docs.ultralytics.com/datasets/detect/coco/
 valid_objects = ["person", "car", "motorbike","bus","truck"]
@@ -26,7 +26,7 @@ line_start = 100
 line_gap = 500
 
 # Location of where to send data to over https
-data_server = ""
+data_server = "http://localhost:6600"
 
 # The group this agent is apart of
 group = "group-a"
