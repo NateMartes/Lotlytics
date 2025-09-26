@@ -2,7 +2,7 @@
 mode = "testing"
 
 # Objects to be recongized. Objects can added from the COCO dataset https://docs.ultralytics.com/datasets/detect/coco/
-valid_objects = ["person", "car", "motorbike","bus","truck"]
+valid_objects = ["person", "car", "motorbike","bus","truck", "cell phone"]
 
 # Where the model is store on the filesystem
 model_path = "./yolov8n.pt"
@@ -14,16 +14,24 @@ confidence_percentage = "0.70"
 keep_alive_frames = 30
 
 # Miniumn frames before detection is how many frames before an object is acknowledged
-minuiumn_frames_before_detecion = 3
+minimum_frames_before_detection = 3
 
 # IOU Threshold is how different the objects should be before it is consider a new object
-iou_threshold = 0.50
+iou_threshold = 0.30
 
 # Line start is the pixel where the first line should start to record volume
-line_start = 100
+line_start = 125
 
 # Line gap is the gap between the 2 lines. This means that if line 1 is at 100px, and the gap is 500, then line 2 would be at 600px
-line_gap = 500
+line_gap = 400
+
+# Entrance and exit sides should be determined from the Camera's POV
+
+# Which side of the camera the entrance is on
+entrance_side = "right"
+
+# Which side of the camera the exit is on
+exit_side = "left"
 
 # Location of where to send data to over https
 data_server = "http://localhost:6600"

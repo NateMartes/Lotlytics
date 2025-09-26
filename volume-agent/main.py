@@ -2,6 +2,7 @@ from ultralytics import YOLO
 from sort import Sort
 from sort import KalmanBoxTracker
 from datetime import datetime, timezone
+from enum import Enum
 import cv2
 import sys
 import numpy as np
@@ -10,6 +11,19 @@ import toml
 import logging
 import requests
 
+
+"""Defined Directions the objects can take. These values will be sent to the server for event capturing"""
+class Direction(Enum):
+    ENTERING = 1
+    EXITING = -1
+
+"""All states the object can be in at any time"""
+class ObjectState(Enum):
+    BEFORE_LINE_A = 0
+    ON_LINE_A = 1
+    BETWEEN_LINES = 2
+    ON_LINE_B = 3
+    AFTER_LINE_B = 4
 
 class Camera:
     def __init__(self, name, width=640, height=640):
@@ -61,9 +75,115 @@ class Camera:
         """
         self.cap.release()
         cv2.destroyAllWindows()
+
+class TrackedObject:
+
+    OBJECT_PATH_LENGTH = 3
+
+    def __init__(self, id, x1, y1, x2, y2, alive_frames, line_a_pos, line_b_pos, line_tolerance, mode):
+        """
+        The TrackedObject Class represents an object currently being tracked by the ObjectTracker class.
+        Args:
+            id: The ID of this object
+            x1: The first x coordinate of the object
+            y1: The first y coordinate of the object
+            x2: The second x coordinate of the object
+            y2: The second y coordinate of the object
+            alive_frames: The amount of frames the object tracker will wait before removing the object from memory
+            line_a_pos: The pixel position of line A
+            line_b_pos: The pixel position of line B
+            line_tolerance: The amount of pixels to tolerate between lines to cosider the object touching the line
+            mode: The mode of the volume agent
+        """
+        self.id = id
+        self.mode = mode
+        self.logger = logging.getLogger("tracked-object")
+        self.set_coordinates(x1, y1, x2, y2)
+        self.set_center()
+        self.set_alive_frames(alive_frames)
+        self.state = None
+        self.object_path = []
+        self.state = self.set_tracked_object_state(line_a_pos, line_b_pos, line_tolerance)
+
+    def set_coordinates(self, x1, y1, x2, y2):
+        """
+        The set_coordiantes methods set the x and y values of this object. It also sets the center.
+        Args:
+            x1: The first x coordinate of the object
+            y1: The first y coordinate of the object
+            x2: The second x coordinate of the object
+            y2: The second y coordinate of the object
+        """
+        self.x1 = x1
+        self.x2 = x2
+        self.y1 = y1
+        self.y2 = y2
+        self.set_center()
+
+    def set_center(self):
+        """
+        The set_center method sets the center x coordinate of this object
+        """
+        self.center = (self.x1 + self.x2) / 2
+
+    def set_alive_frames(self, alive_frames):
+        """
+        The set_alive_framer method sets the frames instance variable this object
+        """
+        self.frames = alive_frames
+
+    def set_tracked_object_state(self, line_a_pos, line_b_pos, line_tolerance):
+        """
+        The set_tracked_object_state method sets the state of the object, updating it if need be.
+        Args:
+            line_a_pos: The pixel position of line A
+            line_b_pos: The pixel position of line B
+            line_tolerance: The amount of pixels to tolerate between lines to cosider the object touching the line
+        Returns:
+            The current state of the object
+        """
+        prev_state = self.state
+        if self.center < line_a_pos - line_tolerance:
+            state = ObjectState.BEFORE_LINE_A
+        elif abs(self.center - line_a_pos) <= line_tolerance:
+            state = ObjectState.ON_LINE_A
+        elif line_a_pos + line_tolerance < self.center < line_b_pos - line_tolerance:
+            state = ObjectState.BETWEEN_LINES
+        elif abs(self.center - line_b_pos) <= line_tolerance:
+            state = ObjectState.ON_LINE_B
+        else:
+            state = ObjectState.AFTER_LINE_B
+
+        if not prev_state == state:
+            self.update_object_path(state)
+            self.state = state
+            if not self.mode == "production":
+                self.logger.info(f"Object with Track_ID: {self.id} made a state change from {prev_state} to {state}")
+
+        return self.state
     
+    def update_object_path(self, new_state):
+        """
+        The update_object_path method updates the current path of the object, 
+        ensuring it stays the length of OBJECT_PATH_LENGTH
+        """
+
+        if len(self.object_path) < self.OBJECT_PATH_LENGTH:
+            self.object_path.append(new_state)
+        else:
+            self.object_path.pop(0)
+            self.object_path.append(new_state)
+    
+    def __str__(self):
+        return f"TrackedObject[{self.id}][{self.state}][({self.x1}, {self.y1}) ({self.x2}, {self.y2})][AliveTime: {self.frames}][Path: {self.object_path}]"
+               
 class ObjectTracker:
-    def __init__(self, keep_alive_frames, min_hits, iou_threshold, group_name, server):
+
+    LINE_TOLERANCE = 10
+    RIGHT_TO_LEFT = [ObjectState.ON_LINE_B, ObjectState.BETWEEN_LINES, ObjectState.ON_LINE_A]
+    LEFT_TO_RIGHT = [ObjectState.ON_LINE_A, ObjectState.BETWEEN_LINES, ObjectState.ON_LINE_B]
+
+    def __init__(self, keep_alive_frames, min_hits, iou_threshold, group_name, server, line_start, line_gap, entrance_side, exit_side, mode):
         """
         The ObjectTracker class handles objects based on detections from the ML model.
         Args:
@@ -71,21 +191,29 @@ class ObjectTracker:
             min_hits: The amount of miniumn to see a specifc object before considering it to exist.
             iou_threshold: The percentage of difference between objects before consider it to be a new object.
             group_name: The name of the group this agent is apart of.
+            line_start: The beginning pixel of the first line.
+            line_gap: How far apart the lines are from each other in pixels.
+            entrance_side: The side of the camera that is the entrance of the lot (From the Camera's POV).
+            exit_side: The side of the camera that is the exit of the lot (From the Camera's POV).
+            mode: The current mode of the volume agent.
         """
         self.tracker = Sort(max_age=keep_alive_frames, min_hits=min_hits, iou_threshold=iou_threshold)
-        self.line_a_objs = {}
-        self.line_b_objs = {}
+        self.object_history = {}
         self.volume = 0
         self.keep_alive_frames = keep_alive_frames
         self.group_name = group_name
         self.server = server
+        self.line_a_pos = line_start
+        self.line_b_pos = line_start + line_gap
+        self.mode = mode
+        self.entrance_side = entrance_side,
+        self.exit_side = exit_side
 
-    def _send_to_sever(self, value):
+    def send_to_sever(self, value):
         """
-        The _send_to_server method sends an increment or decrement to the volume of this area.
+        The send_to_server method sends an increment or decrement to the volume of this area.
         Args:
             value: Either 1 or -1 to increment or decrement.
-            group_name: The group name this agent is apart of.
         """
         capture_time = datetime.now(timezone.utc)
         data = {
@@ -96,63 +224,133 @@ class ObjectTracker:
 
         # requests.post(self.server, data=data)
 
-    def update_objs_in_line_storage(self, objects):
+    def update_SORT_tracker(self, detections):
         """
-        The update_objs_in_line_storage updates objects based on the line they intersect with on the camera.
-        If an object moves from one line to the next, an intercemnt happens. Vise versa for the other direction.
-        No operation occurs when an object intersects with both lines.
+        The update_SORT_tracker updates the simple, online and realtime tracker that
+        differeantiants new objects from ones on the camera.
         Args:
-            objects: The current list of seen objects
+            detections: An array of objects that were detected by the ML model
+        Returns:
+            The updated objects in the SORT tracker
         """
-        for track_id, line in objects:
-            if line == 'A':
-                if track_id in self.line_b_objs:
-                    # Send Data: Entering
-                    self._send_to_sever(1)
-                    self.line_b_objs.pop(track_id)
-                    pass
-                else:
-                    self.line_a_objs[track_id] = self.keep_alive_frames
-            elif line == 'B':
-                if track_id in self.line_a_objs:
-                    # Send Data: Leaving
-                    self._send_to_sever(-1)
-                    self.line_a_objs.pop(track_id)
-                else:
-                    self.line_b_objs[track_id] = self.keep_alive_frames
 
-    def adjust_alive_time_line_sets(self, tracked_objects):
+        if len(detections) > 0:
+            detections_np = np.array(detections)
+        else:
+            detections_np = np.empty((0, 5))
+
+        return self.tracker.update(detections_np)
+    
+    def update_object_history(self, tracked_objects):
         """
-        The adjust_alive_time_line_sets updates the objects in memory to remove old entires of objects that no longer exist.
-        Object that have not been seen for more than the keep_alive_frames are discarded.
+        The update_object_history method updates the Object Tracker's current know objects, adding new ones if needed. Existing objects
+        have there keep alive frames reset and are checked for possible state changes
         Args:
-            objects: The current list of seen objects
+            tracked_objects: The current list of seen objects
         """
-        for _, _, _, _, track_id in tracked_objects:
-            if track_id in self.line_a_objs:
-                self.line_a_objs[track_id] = self.keep_alive_frames
-            if track_id in self.line_b_objs:
-                self.line_b_objs[track_id] = self.keep_alive_frames
+        for x1, y1, x2, y2, track_id in tracked_objects:
+            x1, y1, x2, y2, track_id = int(x1), int(y1), int(x2), int(y2), int(track_id)
+            if not track_id in self.object_history:
 
-        line_a_objs_keys = self.line_a_objs.copy().keys()
-        line_b_objs_keys = self.line_b_objs.copy().keys()
+                self.object_history[track_id] = \
+                TrackedObject(
+                    track_id, 
+                    x1, y1, x2, y2, 
+                    alive_frames=self.keep_alive_frames, 
+                    line_a_pos=self.line_a_pos, 
+                    line_b_pos=self.line_b_pos, 
+                    line_tolerance=self.LINE_TOLERANCE,
+                    mode=self.mode
+                )
 
-        for track_id in line_a_objs_keys:
-            self.line_a_objs[track_id] -= 1
-            if self.line_a_objs[track_id] <= 0:
-                self.line_a_objs.pop(track_id)
+            else:
+                self.object_history[track_id].set_alive_frames(self.keep_alive_frames)
+                self.object_history[track_id].set_coordinates(x1, y1, x2, y2)
+                self.object_history[track_id].set_tracked_object_state(self.line_a_pos, self.line_b_pos, self.LINE_TOLERANCE)
+                self.check_object_path(self.object_history[track_id])
 
-        for track_id in line_b_objs_keys:
-            self.line_b_objs[track_id] -= 1
-            if self.line_b_objs[track_id] <= 0:
-                self.line_b_objs.pop(track_id)
+    def is_entering(self, object):
+        """
+        The is_entering method determines if the current object is entering the lot.
+        Args:
+            object: The current object
+        Returns:
+            True if the object is entering th lot, false otherwise.
+        """
+
+        if self.entrance_side == "left":
+            return object.object_path == self.LEFT_TO_RIGHT
+        else:
+            return object.object_path == self.RIGHT_TO_LEFT
+        
+    def is_exiting(self, object):
+        """
+        The is_exiting method determines if the current object is entering the lot.
+        Args:
+            object: The current object
+        Returns:
+            True if the object is exiting th lot, false otherwise.
+        """
+        if self.exit_side == "left":
+            return object.object_path == self.LEFT_TO_RIGHT
+        else:
+            return object.object_path == self.RIGHT_TO_LEFT
+    
+    def check_object_path(self, tracked_object):
+        """
+        The check_object_path checks the current object's path. If the object's path is entering or exiting the lot,
+        then send an update to the server with the data. The object is then removed from memory
+        Args:
+            tracked_object: The current object
+        """
+        EnteredOrExited = False
+        if self.is_entering(tracked_object):
+            self.send_to_sever(Direction.ENTERING)
+            EnteredOrExited = True
+        elif self.is_exiting(tracked_object):
+            self.send_to_sever(Direction.EXITING)
+            EnteredOrExited = True
+
+        if EnteredOrExited:
+            self.object_history.pop(tracked_object.id)
+
+    def remove_old_objects(self, tracked_objects):
+        """
+        The remove_old_objects method cleans up the object history of objects that have been stored for longer than
+        the keep alive frames value without being seen.
+        Args:
+            tracked_objects: The list of seen objects
+        """
+        object_history_copy = self.object_history.copy()
+
+        for track_id in object_history_copy.keys():
+
+            if not track_id in tracked_objects:
+                prev_alive_frames = self.object_history[track_id].frames
+                self.object_history[track_id].set_alive_frames(prev_alive_frames - 1)
+                if self.object_history[track_id].frames <= 0:
+                    self.object_history.pop(track_id)
 
         # Reset track ids to prevent memory leak
-        if KalmanBoxTracker.count > 100 and (not self.line_a_objs and not self.line_b_objs):
+        if KalmanBoxTracker.count > 100 or not self.object_history:
             KalmanBoxTracker.count = 0
+            
+    def update_tracked_items(self, detections):
+        """
+        The update_tracked_items method updates the items in the Object Tracker, making event updates if needed.
+        Args:
+            detections: The detected objects from the ML model
+        Returns:
+            The current tracked objects from the Object Tracker
+        """
+        tracked_objects = self.update_SORT_tracker(detections)
+        self.update_object_history(tracked_objects)
+        self.remove_old_objects(tracked_objects)
+        return tracked_objects
+        
 
 class VolumeAgent:
-    def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, group_name, server, mode="production", exit_key='q'):
+    def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, group_name, server, entrance_side, exit_side, mode="production", exit_key='q'):
         """
         The VolumeAgent class keeps track of the list of objects it has seen an agggreates the result.
         Args:
@@ -166,6 +364,8 @@ class VolumeAgent:
             line_gap: The distance between both lines on the camera.
             group_name: The group name this agent is apart of.
             server: URI to send event data to.
+            entrance_side: The side of the camera that is the entrance of the lot (From the Camera's POV).
+            exit_side: The side of the camera that is the exit of the lot (From the Camera's POV).
             mode: The current mode of the VolumeAgent.
             exit_key: The key to press to exit the camera debugger
         """
@@ -173,7 +373,7 @@ class VolumeAgent:
         self.confidence = confidence
         self.camera = Camera(name="Volume Agent")
         self.model = YOLO(model_path)
-        self.obj_tracker = ObjectTracker(keep_alive_frames, min_hits, iou_threshold, group_name, server)
+        self.obj_tracker = ObjectTracker(keep_alive_frames, min_hits, iou_threshold, group_name, server, line_start, line_gap, entrance_side, exit_side, mode=mode)
         self.line_gap = line_gap
         self.line_start = line_start
         self.group_name = group_name
@@ -195,9 +395,9 @@ class VolumeAgent:
         if not mode == "production":
             self.logger.info(f"Volume Agent creatd with YOLO model {model_path} and confidence level {self.confidence}. Looking out for {self.objects}")
 
-    def _draw_debug_lines(self, frame, line_color=(0, 0, 255)):
+    def draw_debug_lines(self, frame, line_color=(0, 0, 255)):
         """
-        The _draw_debug_lines is a private method that draws the lines objects intersect with onto the camera.
+        The _draw_debug_lines is a method that draws the lines objects intersect with onto the camera.
         Args:
             frame: The frame to draw the lines on.
             line_color: The color of the lines to be.
@@ -210,9 +410,9 @@ class VolumeAgent:
         self.camera.draw_vertical_line(frame, line_color, (self.line_start, 0), (self.line_start, height))
         self.camera.draw_vertical_line(frame, line_color, (val, 0), (val, height))
 
-    def _gather_detections(self, detection_results):
+    def gather_detections(self, detection_results):
         """
-        The _gather_detections method is a private method use to gather the number of objects found in a specifc frame.
+        The gather_detections method is use to gather the number of objects found in a specifc frame.
         Args:
             detection_results: The raw results from the ML model. This may contain objects we do not care for.
         Returns:
@@ -232,27 +432,15 @@ class VolumeAgent:
 
         return detections
 
-    def _update_tracked_items(self, detections):
+    def draw_debug_data(self, frame, tracked_objects):
         """
-        The _update_tracked_items is a private method that updates the list of objects we are storing. 
-        Args:
-            The list of objects that were detected.
-        """
-        if len(detections) > 0:
-            detections_np = np.array(detections)
-        else:
-            detections_np = np.empty((0, 5))
-
-        return self.obj_tracker.tracker.update(detections_np)
-
-    def _draw_debug_data(self, frame, tracked_objects):
-        """
-        The _draw_debug_data is a private method that draws the camera to the screen along with debug information.
+        The draw_debug_data is a method that draws the camera to the screen along with debug information.
         Args:
             frame: The frame to draw the debug data to.
             tracked_objects: The objects to add debug data to on the screen.
         """
-        self._draw_debug_lines(frame)
+        self.draw_debug_lines(frame)
+
         for x1, y1, x2, y2, track_id in tracked_objects:
             track_id = int(track_id)
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
@@ -260,44 +448,6 @@ class VolumeAgent:
 
         self.camera.display_camera_frame(frame)
     
-    def _is_intersecting_with_line(self, obj_x1y1, obj_x2y2, line_x1y1):
-        """
-        Determines if an object is intersection with a given line's x coordinate.
-        Args:
-            obj_x1y1: A tuple of the first x and y coordiante of the object.
-            obj_x2y2: A tuple of the second x and y coordiante of the object.
-            line_x1y1: A tuple of the first x andy coordinate of the object.
-        Returns:
-            If the object intersects, this returns true. Otherwise, false.
-        """
-        obj_x1, _ = obj_x1y1
-        obj_x2, _ = obj_x2y2
-        line_x, _= line_x1y1
-        return obj_x1 <= line_x <= obj_x2
-    
-    def _get_intersecting_objects(self, tracked_objects):
-        """
-        The _get_intersecting_objects method takes the tracked objects and returns only the ones intersecting with only one line.
-        Args:
-            tracked_objects: The objects to check for intersection.
-        Returns:
-            A list containg the id of the object along with the line it is intersecting with (either A or B)
-        """
-        output = []
-        line_A_x1y1 = (self.line_start, 0)
-        line_B_x1y1 = (self.line_start + self.line_gap, 0)
-        for x1, y1, x2, y2, track_id in tracked_objects:
-            track_id = int(track_id)
-            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-            if self._is_intersecting_with_line((x1, y1), (x2, y2), line_A_x1y1):
-                if not self._is_intersecting_with_line((x1, y1), (x2, y2), line_B_x1y1):
-                    output.append((track_id, 'A'))
-            elif self._is_intersecting_with_line((x1, y1), (x2, y2), line_B_x1y1):
-                if not self._is_intersecting_with_line((x1, y1), (x2, y2), line_A_x1y1):
-                    output.append((track_id, 'B'))
-        
-        return output
-
     def run(self):
         """
         The run method executes the volume agent into a long running process to keep track of the volume of object it
@@ -313,16 +463,18 @@ class VolumeAgent:
                 break
 
             detection_results = self.model(frame, stream=True)
-            detections = self._gather_detections(detection_results)
-            tracked_objects = self._update_tracked_items(detections)
-            self.obj_tracker.adjust_alive_time_line_sets(tracked_objects)
-            intersecting_objects = self._get_intersecting_objects(tracked_objects)
-            self.obj_tracker.update_objs_in_line_storage(intersecting_objects)
+            detections = self.gather_detections(detection_results)
+            objects_on_screen = self.obj_tracker.update_tracked_items(detections)
+
             if not self.mode == "production":
-                self._draw_debug_data(frame, tracked_objects)
-                self.logger.info(f"Current Object Volume {self.obj_tracker.volume}")
-                self.logger.info(f"Objects who have crossed line A {self.obj_tracker.line_a_objs}")
-                self.logger.info(f"Objects who have crossed line B {self.obj_tracker.line_b_objs}")
+                self.draw_debug_data(frame, objects_on_screen)
+                self.camera.display_camera_frame(frame)
+                self.logger.info("Current Tracked Objects")
+                self.logger.info("=================")
+                for obj in self.obj_tracker.object_history.values():
+                    self.logger.info(str(obj))
+                self.logger.info("=================")
+
         self.camera.shutdown()
 
 if __name__ == "__main__":
@@ -331,17 +483,35 @@ if __name__ == "__main__":
     logging.getLogger("ultralytics").setLevel(logging.ERROR)
     
     config = toml.load("config.toml")
+
+    # Make sure entrance and exit input is correct
+    entrance = config["entrance_side"]
+    exit = config["exit_side"]
+    options = {"left", "right"}
+    taken_option = ""
+
+    if not entrance in options:
+        print(f"Error: Entrance value '{entrance}' not valid. Valid options: {options}", file=sys.stderr)
+        sys.exit(1)
+    options.remove(entrance)
+    if not exit in options:
+        print(f"Exit value '{exit}' not valid. Valid options: {options}. Value '{entrance}' already taken by entrance", file=sys.stderr)
+        sys.exit(1)
+
+    # Start the agent
     agent = VolumeAgent(
         objects=config["valid_objects"],
         confidence=float(config["confidence_percentage"]),
         model_path=config["model_path"],
         keep_alive_frames=int(config["keep_alive_frames"]),
-        min_hits=int(config["minuiumn_frames_before_detecion"]),
+        min_hits=int(config["minimum_frames_before_detection"]),
         iou_threshold=float(config["iou_threshold"]),
         line_start=int(config["line_start"]),
         line_gap=int(config["line_gap"]),
         group_name=config["group"],
         server=config["data_server"],
+        entrance_side=entrance,
+        exit_side=exit,
         mode=config["mode"],
     )
     agent.run()
