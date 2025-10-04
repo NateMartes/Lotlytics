@@ -1,6 +1,6 @@
 package com.lotlytics.api.controllers;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.lotlytics.api.entites.Message;
 import com.lotlytics.api.entites.lot.CreateLotPayload;
-import com.lotlytics.api.entites.lot.LotResponseList;
 import com.lotlytics.api.entites.lot.PutLotPayload;
+import com.lotlytics.api.entites.lot.Lot;
+import com.lotlytics.api.services.LotService;
 
 @RestController
 /**
@@ -28,18 +29,16 @@ import com.lotlytics.api.entites.lot.PutLotPayload;
 @RequestMapping("/api/v1/lot")
 public class LotController {
 
+    private LotService lotService;
+
+    public LotController(LotService lotService) {
+        this.lotService = lotService;
+    }
+
     @GetMapping(params = {"groupId"})
-    /**
-     * Handles the /lot endpoint for the Lotlytics API at /api/v1/lot.
-     * This gets all the lots for a specific group.
-     *
-     * @param groupId The required groupId to discover the lots that belong to that group.
-     * @return      A ResponseEntity<Message> with the default API message.
-     */
-    public ResponseEntity<LotResponseList> getAllLots(@RequestParam String groupId) {
-        // Return all Lots for the group
-        return new ResponseEntity<LotResponseList>(
-            new LotResponseList(new ArrayList<>()),
+    public ResponseEntity<List<Lot>> getAllLots(@RequestParam String groupId) {
+        return new ResponseEntity<List<Lot>>(
+            lotService.getLotsByGroup(groupId),
             HttpStatus.OK
         );
     }

@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class EventResponse {
+public class Event {
     private Integer id;
     private Integer lotId;
     private String groupId;
