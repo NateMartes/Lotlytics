@@ -1,0 +1,10 @@
+services:
+  lotlyics_db:
+    container_name: lotlyics_db
+    build:
+      context: .
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: lotlyics
+      POSTGRES_DB: lotlyics_db
+      TZ: UTC
