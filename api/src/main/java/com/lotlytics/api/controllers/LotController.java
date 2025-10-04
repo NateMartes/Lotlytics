@@ -17,6 +17,7 @@ import com.lotlytics.api.entites.Message;
 import com.lotlytics.api.entites.lot.CreateLotPayload;
 import com.lotlytics.api.entites.lot.PutLotPayload;
 import com.lotlytics.api.entites.lot.Lot;
+import com.lotlytics.api.services.GroupService;
 import com.lotlytics.api.services.LotService;
 
 @RestController
@@ -30,13 +31,18 @@ import com.lotlytics.api.services.LotService;
 public class LotController {
 
     private LotService lotService;
+    private GroupService groupService;
 
-    public LotController(LotService lotService) {
+    public LotController(LotService lotService, GroupService groupService) {
         this.lotService = lotService;
+        this.groupService = groupService;
     }
 
     @GetMapping(params = {"groupId"})
     public ResponseEntity<List<Lot>> getAllLots(@RequestParam String groupId) {
+        if (!groupService.isAGroup(groupId)) {
+            return ResponseEntity.notFound().build();
+        }
         return new ResponseEntity<List<Lot>>(
             lotService.getLotsByGroup(groupId),
             HttpStatus.OK
@@ -44,13 +50,16 @@ public class LotController {
     }
 
     @GetMapping(params = {"groupId", "lotId"})
-    public ResponseEntity<Message> getLot(@RequestParam String groupId, @RequestParam Integer lotId) {
+    public ResponseEntity<Lot> getLot(@RequestParam String groupId, @RequestParam Integer lotId) {
         // Return the specifc Lots for the group
-        return new ResponseEntity<Message>(
-            new Message(groupId),
-            HttpStatus.OK
-        );
-    
+        try {
+            return new ResponseEntity<Lot>(
+                lotService.getLot(groupId, lotId),
+                HttpStatus.OK
+                );
+        } catch (jakarta.persistence.EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }    
     }
     @PostMapping(params = {"groupId"})
     public ResponseEntity<Message> postLot(@RequestParam String groupId, @RequestBody CreateLotPayload payload) {
