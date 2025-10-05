@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -15,12 +16,26 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "lots")
 public class Lot {
+
     @Id
+    @Column(insertable = false, updatable = false)
     private Integer id;
     private String name;
     private String groupId;
     private Integer currentVolume;
     private Integer capacity;
+
+    // Postgres Manages time, so don't allow inserts or updates
+    @Column(insertable = false, updatable = false)
     private String createdAt;
+    @Column(insertable = false, updatable = false)
     private String updatedAt;
+
+    // For POST requests
+    public Lot(String groupId, String name, Integer currentVolume, Integer capacity) {
+        this.groupId = groupId;
+        this.name = name;
+        this.currentVolume = currentVolume;
+        this.capacity = capacity;
+    }
 }

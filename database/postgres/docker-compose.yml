@@ -8,3 +8,5 @@ services:
       POSTGRES_PASSWORD: lotlyics
       POSTGRES_DB: lotlyics_db
       TZ: UTC
+    ports:
+      - 5432:5432
