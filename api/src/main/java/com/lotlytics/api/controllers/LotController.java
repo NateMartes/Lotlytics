@@ -19,6 +19,8 @@ import com.lotlytics.api.entites.lot.Lot;
 import com.lotlytics.api.services.GroupService;
 import com.lotlytics.api.services.LotService;
 
+import jakarta.validation.Valid;
+
 import java.util.Map;
 
 @RestController
@@ -66,7 +68,7 @@ public class LotController {
         }
     }    
     @PostMapping(params = {"groupId"})
-    public ResponseEntity<?> postLot(@RequestParam String groupId, @RequestBody CreateLotPayload payload) {
+    public ResponseEntity<?> postLot(@RequestParam String groupId, @Valid @RequestBody CreateLotPayload payload) {
         if (!groupService.isAGroup(groupId)) {
             return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -80,7 +82,7 @@ public class LotController {
     }
 
     @PutMapping(params = {"groupId","lotId"})
-    public ResponseEntity<?> putLot(@RequestParam String groupId, @RequestParam Integer lotId, @RequestBody PutLotPayload payload) {
+    public ResponseEntity<?> putLot(@RequestParam String groupId, @RequestParam Integer lotId, @Valid @RequestBody PutLotPayload payload) {
         if (!groupService.isAGroup(groupId)) {
             return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
