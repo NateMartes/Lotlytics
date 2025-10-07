@@ -1,7 +1,9 @@
 package com.lotlytics.api.services;
 
 import java.util.UUID;
+import java.util.List;
 
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import com.lotlytics.api.entites.group.CreateGroupPayload;
 import com.lotlytics.api.entites.group.Group;
@@ -29,5 +31,16 @@ public class GroupService {
 
         Group g = new Group(id, name);
         return groupRepository.save(g);
+    }
+
+    public List<Group> getGroup(String name) {
+        Group g = new Group();
+        g.setName(name);
+        return groupRepository.findAll(Example.of(g));
+    }
+
+    public void deleteGroup(String groupId) {
+        
+        groupRepository.deleteById(groupId);
     }
 }

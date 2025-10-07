@@ -56,10 +56,19 @@ public class LotService {
         Integer currentVolume = updatedVariables.getVolume();
         String name = updatedVariables.getName();
 
-        Lot updatedLot = new Lot(groupId, name, currentVolume, capacity);
-        updatedLot.setId(lotId);
+        Lot lot = getLot(groupId, lotId);
+        
+        if (capacity != null) {
+            lot.setCapacity(capacity);
+        }
+        if (currentVolume != null) {
+            lot.setCurrentVolume(currentVolume);
+        }
+        if (name != null) {
+             lot.setName(name);
+        }
 
-        return lotRepository.save(updatedLot);
+        return lotRepository.save(lot);
     }
 
     public void deleteLot(String groupId, Integer lotId) {
