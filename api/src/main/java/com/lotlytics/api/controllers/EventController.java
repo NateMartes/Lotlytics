@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lotlytics.api.services.EventService;
 import com.lotlytics.api.services.GroupService;
 import com.lotlytics.api.services.LotService;
+
+import jakarta.validation.Valid;
+
+import com.lotlytics.api.entites.event.CreateEventPayload;
 import com.lotlytics.api.entites.event.Event;
 
 @RestController
@@ -48,20 +52,36 @@ public class EventController {
             );
         }
     }
-/*
-    @GetMapping(params = "groupId")
+
+    @GetMapping(params = {"groupId"})
     public ResponseEntity<?> getGroupEvents(@RequestParam String groupId) {
-        return new ResponseEntity<Message>(new Message("Events for group " + groupId), HttpStatus.OK);
+        if (!groupService.isAGroup(groupId)) {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Group ID does not exist"));
+        } else {
+            return new ResponseEntity<List<Event>>(
+                eventService.getGroupEvents(groupId),
+                HttpStatus.OK
+            );
+        }
     }
-
-    @GetMapping(params = {"groupId", "eventId"})
-    public ResponseEntity<?> getEvent(@RequestParam String groupId, @RequestParam Integer eventId) {
-        return new ResponseEntity<Message>(new Message("Event " + eventId + " for group " + groupId), HttpStatus.OK);
-    }
-
+    
     @PostMapping(params = {"groupId", "lotId"})
-    public ResponseEntity<?> createLotEvent(@RequestParam String groupId, @RequestParam Integer lotId, @RequestBody CreateEventPayload payload) {
-        return new ResponseEntity<Message>(new Message("this is the event creation endpoint"), HttpStatus.OK);
+    public ResponseEntity<?> createLotEvent(@RequestParam String groupId, @RequestParam Integer lotId, @Valid @RequestBody CreateEventPayload payload) {
+        if (!groupService.isAGroup(groupId)) {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Group ID does not exist"));
+        } else if (!lotService.isALot(lotId)){
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Lot does not exist"));
+        } else {
+            return new ResponseEntity<Event>(
+                eventService.saveEvent(groupId, lotId, payload),
+                HttpStatus.OK
+            );
+        }
     }
-*/
 }

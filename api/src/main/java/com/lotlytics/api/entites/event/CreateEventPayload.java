@@ -6,5 +6,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class CreateEventPayload {
-    private String content;
+    private Integer value;
+    private String capturedAt;
 }

@@ -2,6 +2,7 @@ package com.lotlytics.api.services;
 
 import org.springframework.stereotype.Service;
 import com.lotlytics.api.repositories.EventRepository;
+import com.lotlytics.api.entites.event.CreateEventPayload;
 import com.lotlytics.api.entites.event.Event;
 import java.util.List;
 
@@ -16,5 +17,13 @@ public class EventService {
 
     public List<Event> getLotEvents(String groupId, Integer lotId) {
         return eventRepository.getAllEvents();
+    }
+
+    public List<Event> getGroupEvents(String groupId) {
+        return eventRepository.getEventsByGroup(groupId);
+    }
+
+    public Event saveEvent(String groupId, Integer lotId, CreateEventPayload event) {
+        return eventRepository.saveEvent(groupId, lotId, event);
     }
 }

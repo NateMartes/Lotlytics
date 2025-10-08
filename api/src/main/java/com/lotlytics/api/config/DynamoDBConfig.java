@@ -7,6 +7,9 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import com.lotlytics.api.entites.event.Event;
 
 @Configuration
 @EnableConfigurationProperties(AwsDynamoProperties.class)
@@ -38,5 +41,15 @@ public class DynamoDBConfig {
         return DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(dynamoDbClient)
                 .build();
+    }
+
+    @Bean
+    public DynamoDbTable<Event> eventTable(
+            DynamoDbEnhancedClient enhancedClient, 
+            AwsDynamoProperties properties) {
+        return enhancedClient.table(
+            properties.getDefaultTableName(), 
+            TableSchema.fromBean(Event.class)
+        );
     }
 }

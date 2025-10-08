@@ -13,14 +13,14 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @Getter
 @Setter
 public class Event {
-    private Integer id;
+    private String id;
     private Integer lotId;
     private String groupId;
     private Integer value;
     private String capturedAt;
 
     @DynamoDbPartitionKey
-    public Integer getId() {
+    public String getId() {
         return id;
     }
 }
