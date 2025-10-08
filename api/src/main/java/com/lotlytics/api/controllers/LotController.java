@@ -56,15 +56,19 @@ public class LotController {
 
     @GetMapping(params = {"groupId", "lotId"})
     public ResponseEntity<?> getLot(@RequestParam String groupId, @RequestParam Integer lotId) {
-        try {
-            return new ResponseEntity<Lot>(
-                lotService.getLot(groupId, lotId),
-                HttpStatus.OK
-                );
-        } catch (jakarta.persistence.EntityNotFoundException e) {
+        if (!groupService.isAGroup(groupId)) {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Group ID does not exist"));
+        } else if (!lotService.isALot(lotId)){
             return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Lot does not exist"));
+        } else {
+            return new ResponseEntity<Lot>(
+                lotService.getLot(groupId, lotId),
+                HttpStatus.OK
+            );
         }
     }    
     @PostMapping(params = {"groupId"})

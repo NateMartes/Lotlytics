@@ -1,0 +1,28 @@
+services:
+  lotlyics_db_events:
+    build:
+      context: .
+    container_name: lotlyics_db_events
+    ports:
+      - 8000:8000
+    environment:
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    hostname: lotlyics-db-events
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8000"]
+      interval: 5s
+      retries: 12
+      start_period: 5s
+      timeout: 2s
+
+  db_init_helper:
+    build:
+      context: ./db_setup_agent/
+    container_name: db_init_helper
+    environment:
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      lotlyics_db_events:
+        condition: service_healthy

@@ -31,7 +31,7 @@ public class LotService {
         return lotRepository.existsById(id);
     }
 
-    public Lot getLot(String groupId, Integer lotId) throws EntityNotFoundException {
+    public Lot getLot(String groupId, Integer lotId) {
         Lot l = new Lot();
         l.setGroupId(groupId);
         l.setId(lotId);

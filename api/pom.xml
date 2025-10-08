@@ -80,6 +80,16 @@
 			<artifactId>jakarta.el-api</artifactId>
 			<version>5.0.0</version>
 		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>dynamodb</artifactId>
+			 <version>2.25.64</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>dynamodb-enhanced</artifactId>
+			 <version>2.25.64</version>
+		</dependency>
 	</dependencies>
 
 	<build>
