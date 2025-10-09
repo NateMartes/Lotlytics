@@ -47,7 +47,7 @@ public class LotService {
         Integer currentVolume = payload.getVolume();
         String name = payload.getName();
 
-        Lot newLot = new Lot(name, groupId, currentVolume, capacity);
+        Lot newLot = new Lot(groupId, name, currentVolume, capacity);
         return lotRepository.save(newLot);
     }
 

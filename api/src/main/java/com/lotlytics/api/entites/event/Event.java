@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey;
 
 @DynamoDbBean
 @NoArgsConstructor
@@ -22,5 +24,20 @@ public class Event {
     @DynamoDbPartitionKey
     public String getId() {
         return id;
+    }
+    
+    @DynamoDbSecondaryPartitionKey(indexNames = "LotCapturedAtIndex")
+    public Integer getLotId() {
+        return lotId;
+    }
+    
+    @DynamoDbSecondaryPartitionKey(indexNames = "GroupCapturedAtIndex")
+    public String getGroupId() {
+        return groupId;
+    }
+    
+    @DynamoDbSecondarySortKey(indexNames = {"LotCapturedAtIndex", "GroupCapturedAtIndex"})
+    public String getCapturedAt() {
+        return capturedAt;
     }
 }

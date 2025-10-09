@@ -16,7 +16,7 @@ public class EventService {
     }
 
     public List<Event> getLotEvents(String groupId, Integer lotId) {
-        return eventRepository.getAllEvents();
+        return eventRepository.getEventsByLot(groupId, lotId);
     }
 
     public List<Event> getGroupEvents(String groupId) {
