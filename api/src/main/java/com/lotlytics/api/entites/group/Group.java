@@ -8,6 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/*
+ * Represents a Group entity stored in a relational database.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -15,7 +18,12 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "groups")
 public class Group {
+
+    /* The unique identifier for the group. Primary key in the database. */
     @Id
     private String id;
+
+    /* The name of the group. */
     private String name;
 }
+
