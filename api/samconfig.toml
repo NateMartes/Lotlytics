@@ -1,0 +1,17 @@
+version = 0.1
+
+[default.build.parameters]
+use_container = true
+skip_pull_image = false
+
+[default.deploy.parameters]
+stack_name = "lotlytics-api-stack"
+region = "us-east-1"
+resolve_s3 = true
+s3_prefix = "lotlytics-api-stack"
+profile = "lotlytics-api-lambda-role"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+
