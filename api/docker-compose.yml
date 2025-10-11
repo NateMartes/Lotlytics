@@ -1,0 +1,10 @@
+services:
+  lotlytics-api:
+    image: lotlytics-api:latest
+    build:
+      args:
+        - PROJECT_NAME=lotlytics-api
+        - PROJECT_VERSION=1.0.0
+      context: .
+    ports:
+      - 80:6600

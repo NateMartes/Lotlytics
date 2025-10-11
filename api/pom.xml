@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.lotlytics</groupId>
-	<artifactId>api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>api</name>
+	<artifactId>lotlytics-api</artifactId>
+	<version>1.0.0</version>
+	<name>lotlytics-api</name>
 	<description>RESTful API for gathering data within the Lotlytics system</description>
 	<url/>
 	<licenses>
