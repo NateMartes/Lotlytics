@@ -1,0 +1,65 @@
+services:
+  lotlyics_api:
+    build:
+      context: ./api
+    ports:
+      - 80:6600
+    depends_on:
+        lotlyics_db_events:
+          condition: service_healthy
+        lotlyics_db:
+          condition: service_started
+    environment:
+      - SPRING_PROFILES_ACTIVE=container
+    hostname: lotlyics-api
+    networks:
+      - lotlyics_backend
+
+  lotlyics_db:
+    build:
+      context: ./database/postgresql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: lotlyics
+      POSTGRES_DB: lotlyics_db
+    hostname: lotlyics-db
+    ports:
+      - 5432:5432
+    networks:
+      - lotlyics_backend
+
+  lotlyics_db_events:
+    build:
+      context: ./database/dynamodb
+    container_name: lotlyics_db_events
+    ports:
+      - 8000:8000
+    environment:
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    hostname: lotlyics-db-events
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8000"]
+      interval: 5s
+      retries: 12
+      start_period: 5s
+      timeout: 2s
+    networks:
+      - lotlyics_backend
+
+  db_init_helper:
+    build:
+      context: ./database/dynamodb/db_setup_agent/
+    container_name: db_init_helper
+    environment:
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      lotlyics_db_events:
+        condition: service_healthy
+    networks:
+      - lotlyics_backend
+
+networks:
+  lotlyics_backend:
+    driver: bridge
