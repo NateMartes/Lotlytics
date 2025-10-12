@@ -1,0 +1,477 @@
+openapi: 3.0.0
+info:
+  title: Lotlytics OpenAPI Documentation
+  version: v1.0.0
+  description: |
+    The **Lotlytics API** is a RESTful service that provides programmatic access 
+    to the resources and data used by the Lotlytics platform.
+  
+    It is organized around three primary endpoints:
+      - **/lot** — Manage and retrieve parking lot resources.
+      - **/group** — Access and manage parking lot group resources.
+      - **/event** — Create, and record event data.
+  
+    All endpoints follow RESTful principles and are stateless, ensuring 
+    predictable, consistent, and scalable interactions.
+    
+servers:
+  - url: http://localhost:6600
+    description: Generated server url
+paths:
+  /api/v1/lot:
+    get:
+      tags:
+        - /lot
+      operationId: getAllLots
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: lotId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successfully retrieved list of lots
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/LotArray'
+                  - $ref: '#/components/schemas/Lot'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    put:
+      tags:
+        - /lot
+      operationId: putLot
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: lotId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutLotPayload'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lot'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    post:
+      tags:
+        - /lot
+      operationId: postLot
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLotPayload'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lot'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    delete:
+      tags:
+        - /lot
+      operationId: deleteAllLots
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: lotId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Lot deleted
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+          
+  /api/v1/group:
+    get:
+      tags:
+        - /group
+      operationId: getAllGroups
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved list of groups
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GroupArray'
+                  - $ref: '#/components/schemas/Group'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    post:
+      tags:
+        - /group
+      operationId: createGroup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupPayload'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    delete:
+      tags:
+        - /group
+      operationId: deleteGroup
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Group deleted
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+  /api/v1/event:
+    get:
+      tags:
+        - /event
+      operationId: getGroupEvents
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: lotId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successfully retrieved list of events
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/EventArray'
+                  - $ref: '#/components/schemas/Event'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    post:
+      tags:
+        - /event
+      operationId: createLotEvent
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: lotId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventPayload'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+  /api/v1:
+    get:
+      tags:
+        - Debugging
+      operationId: index
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+components:
+  schemas:
+    LotArray:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            description: The unique identifier for the lot.
+            example: 1
+          name:
+            type: string
+            description: The name of the lot.
+            example: "Downtown Garage"
+          groupId:
+            type: string
+            description: The ID of the group this lot belongs to.
+            example: "city-lots-3erdfga0"
+          currentVolume:
+            type: integer
+            description: The current volume used in the lot.
+            example: 45
+          capacity:
+            type: integer
+            description: The maximum capacity of the lot.
+            example: 100
+          createdAt:
+            type: string
+            format: date-time
+            description: The timestamp when the lot was created.
+            example: "2025-10-11T14:23:00Z"
+          updatedAt:
+            type: string
+            format: date-time
+            description: The timestamp of the last update to the lot.
+            example: "2025-10-11T17:45:00Z"
+    Lot:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the lot.
+          example: 1
+        name:
+          type: string
+          description: The name of the lot.
+          example: "Downtown Garage"
+        groupId:
+          type: string
+          description: The ID of the group this lot belongs to.
+          example: "GRP-001"
+        currentVolume:
+          type: integer
+          description: The current volume used in the lot.
+          example: 45
+        capacity:
+          type: integer
+          description: The maximum capacity of the lot.
+          example: 100
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp when the lot was created.
+          example: "2025-10-11T14:23:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: The timestamp of the last update to the lot.
+          example: "2025-10-11T17:45:00Z"    
+    PutLotPayload:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          minLength: 0
+        capacity:
+          type: integer
+          format: int32
+        volume:
+          type: integer
+          format: int32
+    CreateLotPayload:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          minLength: 0
+        capacity:
+          type: integer
+          format: int32
+        volume:
+          type: integer
+          format: int32
+    CreateGroupPayload:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 246
+          minLength: 0
+    CreateEventPayload:
+      type: object
+      properties:
+        value:
+          type: integer
+          format: int32
+        capturedAt:
+          type: string
+    Message:
+      type: object
+      properties:
+        content:
+          type: string
+    GroupArray:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            description: The unique identifier for the group. Primary key in the database.
+            example: "city-lots-3erdfga0"
+          name:
+            type: string
+            description: The name of the group.
+            example: "Downtown Parking Group"
+        required:
+          - id
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the group. Primary key in the database.
+          example: "city-lots-3erdfga0"
+        name:
+          type: string
+          description: The name of the group.
+          example: "Downtown Parking Group"
+      required:
+        - id
+    EventArray:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            description: The unique identifier for the event. Primary partition key in DynamoDB.
+            example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          lotId:
+            type: integer
+            description: The lot ID associated with this event.
+            example: 12
+          groupId:
+            type: string
+            description: The group ID associated with this event.
+            example: "city-lots-3erdfga0"
+          value:
+            type: integer
+            description: The numeric value of the event (e.g., 1 or -1).
+            example: 1
+          capturedAt:
+            type: string
+            format: date-time
+            description: The timestamp when the event was captured.
+            example: "2025-10-11T18:42:00Z"
+        required:
+          - id
+          - lotId
+          - groupId
+          - value
+          - capturedAt
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the event. Primary partition key in DynamoDB.
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        lotId:
+          type: integer
+          description: The lot ID associated with this event.
+          example: 12
+        groupId:
+          type: string
+          description: The group ID associated with this event.
+          example: "city-lots-3erdfga0"
+        value:
+          type: integer
+          description: The numeric value of the event (e.g., 1 or -1).
+          example: 1
+        capturedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the event was captured.
+          example: "2025-10-11T18:42:00Z"
+      required:
+        - id
+        - lotId
+        - groupId
+        - value
+        - capturedAt

@@ -11,6 +11,10 @@ import com.amazonaws.serverless.proxy.spring.SpringBootLambdaContainerHandler;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 
+/*
+ * The LambdaHandler class is used by the serverless Java container to route Lambda requests to the
+ * underlying Spring Boot application.
+ */
 public class LambdaHandler implements RequestStreamHandler {
     
     private static SpringBootLambdaContainerHandler<AwsProxyRequest, AwsProxyResponse> handler;
