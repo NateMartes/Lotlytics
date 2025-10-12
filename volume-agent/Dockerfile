@@ -27,7 +27,7 @@ COPY --chown=agentuser:agentuser ./ ./agent/
 
 WORKDIR /home/agentuser/agent
 
-# Setup venv and install python dependiences
+# Install python dependiences
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
