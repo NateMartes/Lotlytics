@@ -60,6 +60,12 @@ services:
     networks:
       - lotlyics_backend
 
+  lotlytics_api_docs:
+    build:
+      context: ./api-docs/
+    ports:
+      - 6601:8080
+
 networks:
   lotlyics_backend:
     driver: bridge

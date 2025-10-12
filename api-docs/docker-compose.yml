@@ -1,0 +1,6 @@
+services:
+  lotlytics_api_docs:
+    build:
+      context: .
+    ports:
+      - 6601:8080
