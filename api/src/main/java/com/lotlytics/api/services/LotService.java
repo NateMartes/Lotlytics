@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import com.lotlytics.api.entites.exceptions.NotFoundException;
+import com.lotlytics.api.entites.exceptions.BadRequestException;
 import com.lotlytics.api.entites.geocoding.ValidatedLotAddressUSA;
 /**
  * The LotService class defines service methods that are used by the
@@ -105,7 +106,11 @@ public class LotService {
      * @param groupId The id of a group.
      * @return The newly created lot.
      */
-    public Lot postLot(String groupId, CreateLotPayload payload) {
+    public Lot postLot(String groupId, CreateLotPayload payload) throws NotFoundException, BadRequestException {
+
+        if (!groupService.isAGroup(groupId)) {
+            throw new NotFoundException("Group Id does not exist");
+        }
 
         Integer capacity = payload.getCapacity();
         Integer currentVolume = payload.getVolume();
@@ -114,6 +119,20 @@ public class LotService {
         String state = payload.getState();
         String city = payload.getCity();
         String zip = payload.getZip();
+
+        ValidatedLotAddressUSA validatedAddress = geocodingService.validateAddressInUS(street, city, state, zip);
+        if (!validatedAddress.isValid()) {
+            throw new BadRequestException("Address is not valid");
+        }
+        if (!validatedAddress.isInUSA()) {
+            throw new BadRequestException("Non USA Address");
+        }
+
+        // Overwrite Values with the ones from the validated object
+        street = validatedAddress.getStreet();
+        city = validatedAddress.getCity();
+        state = validatedAddress.getState();
+        zip = validatedAddress.getZip();
 
         Lot newLot = new Lot(groupId, name, currentVolume, capacity, street, city, state, zip);
         newLot = lotRepository.save(newLot);
@@ -131,7 +150,7 @@ public class LotService {
      * @throws NotFoundException
      * @return The newly updated lot.
      */
-    public Lot putLot(String groupId, Integer lotId, PutLotPayload updatedVariables) throws NotFoundException {
+    public Lot putLot(String groupId, Integer lotId, PutLotPayload updatedVariables) throws NotFoundException, BadRequestException {
         if (!groupService.isAGroup(groupId)) {
             throw new NotFoundException("Group Id does not exist");
         }
@@ -158,6 +177,19 @@ public class LotService {
         updateField.accept(updatedVariables.getCity(), v -> lot.setCity((String) v));
         updateField.accept(updatedVariables.getZip(), v -> lot.setZip((String) v));
         
+        ValidatedLotAddressUSA validatedAddress = geocodingService.validateAddressInUS(lot.getStreet(), lot.getCity(), lot.getState(), lot.getZip());
+        if (!validatedAddress.isValid()) {
+            throw new BadRequestException("Address is not valid");
+        }
+        if (!validatedAddress.isInUSA()) {
+            throw new BadRequestException("Non USA Address");
+        }
+
+        // Overwrite Values with the ones from the validated object
+        lot.setStreet(validatedAddress.getStreet());
+        lot.setCity(validatedAddress.getCity());
+        lot.setState(validatedAddress.getState());
+        lot.setZip(validatedAddress.getZip());
 
         Lot updatedLot = lotRepository.save(lot);
         log.info(logMsg.toString());
