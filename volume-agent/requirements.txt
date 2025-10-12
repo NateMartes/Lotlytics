@@ -1,3 +1,12 @@
+# Since ultralytics downloads CUDA libraries by default, install PyTorch packages first.
+# Some of these packages are used purley for vitrulization (opencv-python, scikit-image etc.)
+# Consider removing those packages entirely or just to headless versions in a production environment.
+
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+torch==2.8.0
+torchvision==0.23.0
+
 matplotlib==3.10.6
 scikit-image==0.24.0
 filterpy==1.4.5

@@ -18,6 +18,7 @@ RUN mkdir -p /home/agentuser/.config/Ultralytics \
     && chown -R agentuser:agentuser /home/agentuser/.config
 
 ENV YOLO_CONFIG_DIR=/home/agentuser/.config/Ultralytics
+ENV PATH=$PATH:/home/agentuser/.local/bin
 
 WORKDIR /home/agentuser/
 
@@ -27,10 +28,9 @@ COPY --chown=agentuser:agentuser ./ ./agent/
 WORKDIR /home/agentuser/agent
 
 # Setup venv and install python dependiences
-RUN python3 -m venv volume-agent-env/ \
-    && ./volume-agent-env/bin/pip install --upgrade pip \
-    && ./volume-agent-env/bin/pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-CMD ["./volume-agent-env/bin/python", "main.py"]
+CMD ["python", "main.py"]
 
 
