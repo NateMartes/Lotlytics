@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import com.lotlytics.api.entites.geocoding.ValidatedLotAddressUSA;
 /**
  * The LotService class defines service methods that are used by the
  * LotController.
@@ -24,6 +25,7 @@ import java.util.function.Consumer;
 public class LotService {
 
     private LotRepository lotRepository;
+    private GeocodingService geocodingService;
 
     /**
      * The LotService class defines service methods that are used by the
@@ -31,8 +33,9 @@ public class LotService {
      * 
      * @see LotController
      */
-    public LotService(LotRepository lotRepository) {
+    public LotService(LotRepository lotRepository, GeocodingService geocodingService) {
         this.lotRepository = lotRepository;
+        this.geocodingService = geocodingService;
     }
 
     /**
@@ -69,6 +72,7 @@ public class LotService {
      * @return A lot.
      */
     public Lot getLot(String groupId, Integer lotId) {
+
         Lot l = new Lot();
         l.setGroupId(groupId);
         l.setId(lotId);
@@ -87,17 +91,16 @@ public class LotService {
      * @param groupId The id of a group.
      * @return The newly created lot.
      */
-    public Lot postLot(String groupId, CreateLotPayload payload) {
+    public Lot postLot(String groupId, CreateLotPayload payload){
         Integer capacity = payload.getCapacity();
         Integer currentVolume = payload.getVolume();
         String name = payload.getName();
-        String address = payload.getAddress();
-        String state = payload.getCity();
+        String street = payload.getStreet();
+        String state = payload.getState();
         String city = payload.getCity();
         String zip = payload.getZip();
 
-        log.info("Address: "+address);
-        Lot newLot = new Lot(groupId, name, currentVolume, capacity, address, city, state, zip);
+        Lot newLot = new Lot(groupId, name, currentVolume, capacity, street, city, state, zip);
         newLot = lotRepository.save(newLot);
 
         log.info("Created lot '" + name + "' for " + groupId + " with ID "+newLot.getId());
@@ -128,7 +131,7 @@ public class LotService {
         updateField.accept(updatedVariables.getCapacity(), v -> lot.setCapacity((Integer) v));
         updateField.accept(updatedVariables.getVolume(), v -> lot.setCurrentVolume((Integer) v));
         updateField.accept(updatedVariables.getName(), v -> lot.setName((String) v));
-        updateField.accept(updatedVariables.getAddress(), v -> lot.setAddress((String) v));
+        updateField.accept(updatedVariables.getStreet(), v -> lot.setStreet((String) v));
         updateField.accept(updatedVariables.getState(), v -> lot.setState((String) v));
         updateField.accept(updatedVariables.getCity(), v -> lot.setCity((String) v));
         updateField.accept(updatedVariables.getZip(), v -> lot.setZip((String) v));

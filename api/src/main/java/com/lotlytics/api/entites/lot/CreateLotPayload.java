@@ -17,8 +17,8 @@ public class CreateLotPayload {
     private String name;
 
     /** The address of the lot */
-    @Size(max = 255, message = "Lot addresses cannot be greater than 255 characters")
-    private String address;
+    @Size(max = 255, message = "Lot street cannot be greater than 255 characters")
+    private String street;
 
     /** The city the lot resides in */
     @Size(max = 255, message = "Lot cities cannot be greater than 255 characters")

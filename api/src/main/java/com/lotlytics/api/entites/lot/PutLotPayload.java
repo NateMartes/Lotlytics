@@ -25,9 +25,9 @@ public class PutLotPayload {
     /** The current volume of the lot. */
     private Integer volume;
     
-    /** The address of the lot */
-    @Size(max = 255, message = "Lot addresses cannot be greater than 255 characters")
-    private String address;
+    /** The street of the lot */
+    @Size(max = 255, message = "Lot street cannot be greater than 255 characters")
+    private String street;
 
     /** The city the lot resides in */
     @Size(max = 255, message = "Lot cities cannot be greater than 255 characters")

@@ -34,8 +34,8 @@ public class Lot {
     /** The name of the lot. */
     private String name;
 
-    /** The address of the lot */
-    private String address;
+    /** The street of the lot */
+    private String street;
 
     /** The city the lot resides in */
     private String city;
@@ -72,12 +72,12 @@ public class Lot {
      * @param currentVolume the current volume of the lot
      * @param capacity the maximum capacity of the lot
      */
-    public Lot(String groupId, String name, Integer currentVolume, Integer capacity, String address, String city, String state, String zip) {
+    public Lot(String groupId, String name, Integer currentVolume, Integer capacity, String street, String city, String state, String zip) {
         this.groupId = groupId;
         this.name = name;
         this.currentVolume = currentVolume;
         this.capacity = capacity;
-        this.address = address;
+        this.street = street;
         this.city = city;
         this.state = state;
         this.zip = zip;
