@@ -9,15 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.lotlytics.api.services.EventService;
-import com.lotlytics.api.services.GroupService;
-import com.lotlytics.api.services.LotService;
 import jakarta.validation.Valid;
 import com.lotlytics.api.entites.event.CreateEventPayload;
-import com.lotlytics.api.entites.event.Event;
+import com.lotlytics.api.repositories.EventRepository;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
-import java.util.Map;
 
 /*
  * The EventController Class handles request and responses for
@@ -26,11 +21,9 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/event")
-public class EventController {
+public class EventController extends GenericController {
 
     EventService eventService;
-    LotService lotService;
-    GroupService groupService;
     private static String endpointMsg = "%s /api/v1/event%s";
 
     /**
@@ -40,14 +33,10 @@ public class EventController {
      * @see EventService
      * @see EventRepository
      * 
-     * @param lotService A LotService bean providing service methods.
-     * @param groupService A GroupService bean providing group methods.
      * @param eventService A EventService bean providing group methods.
      */
-    public EventController(LotService lotService, GroupService groupService, EventService eventService) {
+    public EventController(EventService eventService) {
         this.eventService = eventService;
-        this.lotService = lotService;
-        this.groupService = groupService;
     }
     
     /**
@@ -61,20 +50,7 @@ public class EventController {
     @GetMapping(params = {"groupId", "lotId"})
     public ResponseEntity<?> getLotEvents(@RequestParam String groupId, @RequestParam Integer lotId) {
         log.info(String.format(endpointMsg, "GET", "?groupId="+groupId+"&lotId="+lotId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else if (!lotService.isALot(lotId)){
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Lot does not exist"));
-        } else {
-            return new ResponseEntity<List<Event>>(
-                eventService.getLotEvents(groupId, lotId),
-                HttpStatus.OK
-            );
-        }
+        return callServiceMethod(() -> eventService.getLotEvents(groupId, lotId), HttpStatus.OK);
     }
 
     /**
@@ -87,16 +63,7 @@ public class EventController {
     @GetMapping(params = {"groupId"})
     public ResponseEntity<?> getGroupEvents(@RequestParam String groupId) {
         log.info(String.format(endpointMsg, "GET", "?groupId="+groupId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else {
-            return new ResponseEntity<List<Event>>(
-                eventService.getGroupEvents(groupId),
-                HttpStatus.OK
-            );
-        }
+        return callServiceMethod(() -> eventService.getGroupEvents(groupId), HttpStatus.OK);
     }
 
     /**
@@ -114,19 +81,6 @@ public class EventController {
     @PostMapping(params = {"groupId", "lotId"})
     public ResponseEntity<?> createLotEvent(@RequestParam String groupId, @RequestParam Integer lotId, @Valid @RequestBody CreateEventPayload payload) {
         log.info(String.format(endpointMsg, "POST", "?groupId="+groupId+"&lotId="+lotId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else if (!lotService.isALot(lotId)){
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Lot does not exist"));
-        } else {
-            return new ResponseEntity<Event>(
-                eventService.saveEvent(groupId, lotId, payload),
-                HttpStatus.CREATED
-            );
-        }
+        return callServiceMethod(() -> eventService.saveEvent(groupId, lotId, payload), HttpStatus.CREATED);
     }
 }

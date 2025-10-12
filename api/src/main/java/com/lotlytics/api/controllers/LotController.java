@@ -1,7 +1,5 @@
 package com.lotlytics.api.controllers;
 
-import java.util.List;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,12 +10,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.lotlytics.api.entites.lot.CreateLotPayload;
 import com.lotlytics.api.entites.lot.PutLotPayload;
-import com.lotlytics.api.entites.lot.Lot;
-import com.lotlytics.api.services.GroupService;
 import com.lotlytics.api.services.LotService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,25 +24,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/lot")
-public class LotController {
+public class LotController extends GenericController {
 
     private LotService lotService;
-    private GroupService groupService;
     private static String endpointMsg = "%s /api/v1/lot%s";
 
     /**
      * The LotController Class handles request and responses for
      * The /api/v1/lot endpoint.
      * 
-     * @see GroupService
      * @see LotService
      * 
      * @param lotService A LotService bean providing service methods.
      * @param groupService A GroupService bean providing service methods.
      */
-    public LotController(LotService lotService, GroupService groupService) {
+    public LotController(LotService lotService) {
         this.lotService = lotService;
-        this.groupService = groupService;
     }
 
     /**
@@ -59,15 +52,7 @@ public class LotController {
     @GetMapping(params = {"groupId"})
     public ResponseEntity<?> getAllLots(@RequestParam String groupId) {
         log.info(String.format(endpointMsg, "GET", "?groupId="+groupId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        }
-        return new ResponseEntity<List<Lot>>(
-            lotService.getLotsByGroup(groupId),
-            HttpStatus.OK
-        );
+        return callServiceMethod(() -> lotService.getLotsByGroup(groupId), HttpStatus.OK);
     }
 
     /**
@@ -82,26 +67,7 @@ public class LotController {
     @GetMapping(params = {"groupId", "lotId"})
     public ResponseEntity<?> getLot(@RequestParam String groupId, @RequestParam Integer lotId) {
         log.info(String.format(endpointMsg, "GET", "?groupId="+groupId+"&lotId="+lotId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else if (!lotService.isALot(lotId)){
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Lot does not exist"));
-        } else {
-            try {
-                return new ResponseEntity<Lot>(
-                    lotService.getLot(groupId, lotId),
-                    HttpStatus.OK
-                );
-            } catch (EntityNotFoundException e) {
-                return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Forbidden"));
-            }
-        }
+        return callServiceMethod(() -> lotService.getLot(groupId, lotId), HttpStatus.OK);
     }   
     
     /**
@@ -117,16 +83,7 @@ public class LotController {
     @PostMapping(params = {"groupId"})
     public ResponseEntity<?> postLot(@RequestParam String groupId, @Valid @RequestBody CreateLotPayload payload) {
         log.info(String.format(endpointMsg, "POST", "?groupId="+groupId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else {
-            return new ResponseEntity<Lot>(
-                lotService.postLot(groupId, payload),
-                HttpStatus.CREATED
-            );
-        }
+        return callServiceMethod(() -> lotService.postLot(groupId, payload), HttpStatus.CREATED);
     }
 
     /**
@@ -144,26 +101,7 @@ public class LotController {
     @PutMapping(params = {"groupId","lotId"})
     public ResponseEntity<?> putLot(@RequestParam String groupId, @RequestParam Integer lotId, @Valid @RequestBody PutLotPayload payload) {
         log.info(String.format(endpointMsg, "PUT", "?groupId="+groupId+"&lotId="+lotId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else if (!lotService.isALot(lotId)){
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Lot does not exist"));
-        } else {
-            try {
-                return new ResponseEntity<Lot>(
-                    lotService.putLot(groupId, lotId, payload),
-                    HttpStatus.OK
-                );
-            } catch (EntityNotFoundException e) {
-                return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Forbidden"));
-            }
-        }
+        return callServiceMethod(() -> lotService.putLot(groupId, lotId, payload), HttpStatus.OK);
     }
 
     /**
@@ -177,18 +115,7 @@ public class LotController {
     @DeleteMapping(params = {"groupId", "lotId"})
     public ResponseEntity<?> deleteLot(@RequestParam String groupId, @RequestParam Integer lotId) {
         log.info(String.format(endpointMsg, "DELETE", "?groupId="+groupId+"&lotId="+lotId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else if (!lotService.isALot(lotId)){
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Lot does not exist"));
-        } else {
-            lotService.deleteLot(groupId, lotId);
-            return ResponseEntity.noContent().build();    
-        }
+        return callVoidServiceMethod(() -> lotService.deleteLot(groupId, lotId), HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -201,14 +128,8 @@ public class LotController {
     @DeleteMapping(params = {"groupId"})
     public ResponseEntity<?> deleteAllLots(@RequestParam String groupId) {
         log.info(String.format(endpointMsg, "DELETE", "?groupId="+groupId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else {
-            lotService.deleteAllLots(groupId);
-            return ResponseEntity.noContent().build();    
-        }
+        return callVoidServiceMethod(() -> lotService.deleteAllLots(groupId), HttpStatus.NO_CONTENT);
+
     }
 
 }

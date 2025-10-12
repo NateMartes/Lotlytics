@@ -4,6 +4,8 @@ import java.util.UUID;
 import java.util.List;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
+
+import com.lotlytics.api.entites.exceptions.NotFoundException;
 import com.lotlytics.api.entites.group.CreateGroupPayload;
 import com.lotlytics.api.entites.group.Group;
 import com.lotlytics.api.repositories.GroupRepository;
@@ -88,6 +90,9 @@ public class GroupService {
      * @param groupId The Id of a group.
      */
     public void deleteGroup(String groupId) {
+        if (!isAGroup(groupId)) {
+            throw new NotFoundException("Group Id does not exist");
+        }
         groupRepository.deleteById(groupId);
         log.info("Removed group '" + groupId +"'");
     }

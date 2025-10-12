@@ -11,5 +11,5 @@ import lombok.Getter;
 public class ErrorMessage {
 
     /** The content of the error message. */
-    private String content;
+    private String error;
 }

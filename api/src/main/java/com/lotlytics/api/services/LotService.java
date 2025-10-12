@@ -7,12 +7,12 @@ import com.lotlytics.api.entites.lot.Lot;
 import com.lotlytics.api.entites.lot.PutLotPayload;
 import com.lotlytics.api.controllers.LotController;
 import com.lotlytics.api.repositories.LotRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import com.lotlytics.api.entites.exceptions.NotFoundException;
 import com.lotlytics.api.entites.geocoding.ValidatedLotAddressUSA;
 /**
  * The LotService class defines service methods that are used by the
@@ -25,6 +25,7 @@ import com.lotlytics.api.entites.geocoding.ValidatedLotAddressUSA;
 public class LotService {
 
     private LotRepository lotRepository;
+    private GroupService groupService;
     private GeocodingService geocodingService;
 
     /**
@@ -33,23 +34,10 @@ public class LotService {
      * 
      * @see LotController
      */
-    public LotService(LotRepository lotRepository, GeocodingService geocodingService) {
+    public LotService(LotRepository lotRepository, GroupService groupService, GeocodingService geocodingService) {
         this.lotRepository = lotRepository;
         this.geocodingService = geocodingService;
-    }
-
-    /**
-     * The getLotsByGroup method gets all lots based on groupId
-     * 
-     * @param groupId The Id of the group.
-     * @return A list of lots
-     */
-    public List<Lot> getLotsByGroup(String groupId) {
-        Lot l = new Lot();
-        l.setGroupId(groupId);
-        List<Lot> out = lotRepository.findAll(Example.of(l));
-        log.info("Gathered lots for " + groupId);
-        return out;
+        this.groupService = groupService;
     }
 
     /**
@@ -63,23 +51,49 @@ public class LotService {
     }
 
     /**
-     * The getLot method gets a possible lot given an id and group id.
+     * The getLotsByGroup method gets all lots based on groupId
      * 
-     * @throws EntityNotFoundException if the lot does not exist.
-     * 
-     * @param id The possible id of a lot.
-     * @param groupId The possible id of a group.
-     * @return A lot.
+     * @param groupId The Id of the group.
+     * @throws BadRequestException
+     * @return A list of lots.
      */
-    public Lot getLot(String groupId, Integer lotId) {
+    public List<Lot> getLotsByGroup(String groupId) throws NotFoundException {
+        System.out.println(groupId);
+        if (!groupService.isAGroup(groupId)) {
+            throw new NotFoundException("Group Id does not exist");
+        }
 
         Lot l = new Lot();
         l.setGroupId(groupId);
+        List<Lot> out = lotRepository.findAll(Example.of(l));
+        
+        log.info("Gathered lots for " + groupId);
+        return out;
+    }
+
+    /**
+     * The getLot method gets a possible lot given an id and group id.
+     * 
+     * @throws NotFoundException if the lot or group does not exist.
+     * 
+     * @param id The possible id of a lot.
+     * @param groupId The possible id of a group.
+     * @throws NotFoundException
+     * @return A lot.
+     */
+    public Lot getLot(String groupId, Integer lotId) throws NotFoundException {
+
+        Lot l = new Lot();
+        l.setGroupId(groupId);
+        if (!groupService.isAGroup(groupId)) {
+            throw new NotFoundException("Group Id does not exist");
+        }
+
         l.setId(lotId);
         Optional<Lot> out = lotRepository.findOne(Example.of(l));
+
         if (out.isEmpty()) {
-            log.warn("Lot with group " + groupId + " and ID "+lotId+" does not exist");
-            throw new EntityNotFoundException();
+            throw new NotFoundException("Lot does not exist");
         }
         return out.get();
     }
@@ -91,7 +105,8 @@ public class LotService {
      * @param groupId The id of a group.
      * @return The newly created lot.
      */
-    public Lot postLot(String groupId, CreateLotPayload payload){
+    public Lot postLot(String groupId, CreateLotPayload payload) {
+
         Integer capacity = payload.getCapacity();
         Integer currentVolume = payload.getVolume();
         String name = payload.getName();
@@ -113,10 +128,17 @@ public class LotService {
      * @param groupId The id of a group.
      * @param lotId The id of a lot.
      * @param updatedVariables The new variables to update for the lot.
+     * @throws NotFoundException
      * @return The newly updated lot.
      */
-    public Lot putLot(String groupId, Integer lotId, PutLotPayload updatedVariables) {
-        
+    public Lot putLot(String groupId, Integer lotId, PutLotPayload updatedVariables) throws NotFoundException {
+        if (!groupService.isAGroup(groupId)) {
+            throw new NotFoundException("Group Id does not exist");
+        }
+        if (!isALot(lotId)) {
+            throw new NotFoundException("Lot Id does not exist");
+        }
+
         Lot lot = getLot(groupId, lotId);
         StringBuilder logMsg = new StringBuilder("Updated lot " + lotId);
 
@@ -147,8 +169,15 @@ public class LotService {
      * 
      * @param groupId The Id of the group the lot belongs to.
      * @param lotId The Id of the lot.
+     * @throws NotFoundException
      */
-    public void deleteLot(String groupId, Integer lotId) {
+    public void deleteLot(String groupId, Integer lotId) throws NotFoundException {
+        if (!groupService.isAGroup(groupId)) {
+            throw new NotFoundException("Group Id does not exist");
+        }
+        if (!isALot(lotId)) {
+            throw new NotFoundException("Lot Id does not exist");
+        }
         lotRepository.deleteById(lotId);
         log.info("Removed lot with ID "+lotId);
     }
@@ -156,8 +185,12 @@ public class LotService {
     /**
      * The deleteAllLots method removes all lots for a group.
      * @param groupId The id of the group
+     * @throws NotFoundException
      */
-    public void deleteAllLots(String groupId) {
+    public void deleteAllLots(String groupId) throws NotFoundException {
+        if (!groupService.isAGroup(groupId)) {
+            throw new NotFoundException("Group Id does not exist");
+        }
         Lot l = new Lot();
         l.setGroupId(groupId);
         List<Lot> entites = lotRepository.findAll(Example.of(l));

@@ -10,13 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 import com.lotlytics.api.entites.group.CreateGroupPayload;
-import com.lotlytics.api.entites.group.Group;
 import com.lotlytics.api.services.GroupService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import java.util.List;
-import java.util.Map;
-
 /*
  * The GroupController Class handles request and responses for
  * The /api/v1/group endpoint.
@@ -24,7 +20,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/group")
-public class GroupController {
+public class GroupController extends GenericController {
 
     GroupService groupService;
     private static String endpointMsg = "%s /api/v1/group%s";
@@ -50,10 +46,7 @@ public class GroupController {
     @GetMapping(params = "name")
     public ResponseEntity<?> getGroup(@RequestParam String name) {
         log.info(String.format(endpointMsg, "GET", "?name="+name));
-        return new ResponseEntity<List<Group>>(
-            groupService.getGroup(name),
-            HttpStatus.OK
-        );
+        return callServiceMethod(() -> groupService.getGroup(name), HttpStatus.OK);
     }
 
     /**
@@ -64,10 +57,7 @@ public class GroupController {
     @GetMapping
     public ResponseEntity<?> getAllGroups() {
         log.info(String.format(endpointMsg, "GET", ""));
-        return new ResponseEntity<List<Group>>(
-            groupService.getAllGroups(),
-            HttpStatus.OK
-        );
+        return callServiceMethod(() -> groupService.getAllGroups(), HttpStatus.OK);
     }
 
 
@@ -83,10 +73,7 @@ public class GroupController {
     @PostMapping
     public ResponseEntity<?> createGroup(@Valid @RequestBody CreateGroupPayload payload) {
         log.info(String.format(endpointMsg, "POST", ""));
-        return new ResponseEntity<Group>(
-            groupService.createGroup(payload),
-            HttpStatus.CREATED
-        );
+        return callServiceMethod(() -> groupService.createGroup(payload), HttpStatus.CREATED);
     }
 
     /**
@@ -99,13 +86,6 @@ public class GroupController {
     @DeleteMapping(params = "groupId")
     public ResponseEntity<?> deleteGroup(@RequestParam String groupId) {
         log.info(String.format(endpointMsg, "DELETE", "?groupId="+groupId));
-        if (!groupService.isAGroup(groupId)) {
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Group ID does not exist"));
-        } else {
-            groupService.deleteGroup(groupId);
-            return ResponseEntity.noContent().build();    
-        }
+        return callVoidServiceMethod(() -> groupService.deleteGroup(groupId), HttpStatus.NO_CONTENT);
     }
 }
