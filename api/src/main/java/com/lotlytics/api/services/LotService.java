@@ -11,7 +11,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
-
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 /**
  * The LotService class defines service methods that are used by the
  * LotController.
@@ -90,8 +91,13 @@ public class LotService {
         Integer capacity = payload.getCapacity();
         Integer currentVolume = payload.getVolume();
         String name = payload.getName();
+        String address = payload.getAddress();
+        String state = payload.getCity();
+        String city = payload.getCity();
+        String zip = payload.getZip();
 
-        Lot newLot = new Lot(groupId, name, currentVolume, capacity);
+        log.info("Address: "+address);
+        Lot newLot = new Lot(groupId, name, currentVolume, capacity, address, city, state, zip);
         newLot = lotRepository.save(newLot);
 
         log.info("Created lot '" + name + "' for " + groupId + " with ID "+newLot.getId());
@@ -107,28 +113,29 @@ public class LotService {
      * @return The newly updated lot.
      */
     public Lot putLot(String groupId, Integer lotId, PutLotPayload updatedVariables) {
-        Integer capacity = updatedVariables.getCapacity();
-        Integer currentVolume = updatedVariables.getVolume();
-        String name = updatedVariables.getName();
-
+        
         Lot lot = getLot(groupId, lotId);
-        String logMsg = "Updated lot "+lotId;
+        StringBuilder logMsg = new StringBuilder("Updated lot " + lotId);
 
-        if (capacity != null) {
-            lot.setCapacity(capacity);
-            logMsg = logMsg + " Capacity: "+capacity;
-        }
-        if (currentVolume != null) {
-            lot.setCurrentVolume(currentVolume);
-            logMsg = logMsg+ " Volume: "+currentVolume;
-        }
-        if (name != null) {
-             lot.setName(name);
-             logMsg = logMsg+ " Name: "+name;
-        }
+        // Helper lambda to update a field if not null
+        BiConsumer<Object, Consumer<Object>> updateField = (value, setter) -> {
+            if (value != null) {
+                setter.accept(value);
+                logMsg.append(" ").append(value.toString());
+            }
+        };
+
+        updateField.accept(updatedVariables.getCapacity(), v -> lot.setCapacity((Integer) v));
+        updateField.accept(updatedVariables.getVolume(), v -> lot.setCurrentVolume((Integer) v));
+        updateField.accept(updatedVariables.getName(), v -> lot.setName((String) v));
+        updateField.accept(updatedVariables.getAddress(), v -> lot.setAddress((String) v));
+        updateField.accept(updatedVariables.getState(), v -> lot.setState((String) v));
+        updateField.accept(updatedVariables.getCity(), v -> lot.setCity((String) v));
+        updateField.accept(updatedVariables.getZip(), v -> lot.setZip((String) v));
+        
 
         Lot updatedLot = lotRepository.save(lot);
-        log.info(logMsg);
+        log.info(logMsg.toString());
         return updatedLot;
     }
 

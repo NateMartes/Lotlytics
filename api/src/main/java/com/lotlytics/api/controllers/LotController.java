@@ -155,7 +155,7 @@ public class LotController {
         } else {
             try {
                 return new ResponseEntity<Lot>(
-                    lotService.getLot(groupId, lotId),
+                    lotService.putLot(groupId, lotId, payload),
                     HttpStatus.OK
                 );
             } catch (EntityNotFoundException e) {

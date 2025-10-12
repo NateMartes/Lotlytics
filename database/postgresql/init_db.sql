@@ -8,10 +8,14 @@ CREATE TABLE groups (
 
 CREATE TABLE lots (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
     group_id VARCHAR(255) NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     capacity INT NOT NULL,
     current_volume INT DEFAULT 0,
+    name VARCHAR(255) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    state VARCHAR(255) NOT NULL,
+    zip VARCHAR(20) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -38,8 +42,8 @@ INSERT INTO groups (id, name) VALUES
 ('google-5e6f7g8h', 'google'), 
 ('datadog-9i0j1k2l', 'datadog');
 
-INSERT INTO lots (name, group_id, capacity, current_volume) VALUES 
-('Lot A', 'wilkes-1a2b3c4d', 50, 10), 
-('Lot B', 'wilkes-1a2b3c4d', 100, 75), 
-('Lot C', 'google-5e6f7g8h', 30, 5), 
-('Lot D', 'datadog-9i0j1k2l', 80, 40);
+INSERT INTO lots (group_id, capacity, current_volume, name, address, city, state, zip) VALUES
+('wilkes-1a2b3c4d', 50, 10, 'Lot A', '123 Main St', 'Wilkes-Barre', 'PA', '18711'),
+('wilkes-1a2b3c4d', 100, 75, 'Lot B', '456 Maple Ave', 'Wilkes-Barre', 'PA', '18711'),
+('google-5e6f7g8h', 30, 5, 'Lot C', '1600 Amphitheatre Pkwy', 'Mountain View', 'CA', '94043'),
+('datadog-9i0j1k2l', 80, 40, 'Lot D', '500 Tech Dr', 'Boston', 'MA', '02110');

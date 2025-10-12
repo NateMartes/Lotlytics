@@ -24,4 +24,20 @@ public class PutLotPayload {
 
     /** The current volume of the lot. */
     private Integer volume;
+    
+    /** The address of the lot */
+    @Size(max = 255, message = "Lot addresses cannot be greater than 255 characters")
+    private String address;
+
+    /** The city the lot resides in */
+    @Size(max = 255, message = "Lot cities cannot be greater than 255 characters")
+    private String city;
+
+    /** The state the lot resides in */
+    @Size(max = 255, message = "Lot states cannot be greater than 255 characters")
+    private String state;
+
+    /** The zip code of the lot */
+    @Size(max = 20, message = "Lot zip codes cannot be greater than 20 characters")
+    private String zip;
 }

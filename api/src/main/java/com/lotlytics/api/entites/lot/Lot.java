@@ -34,6 +34,18 @@ public class Lot {
     /** The name of the lot. */
     private String name;
 
+    /** The address of the lot */
+    private String address;
+
+    /** The city the lot resides in */
+    private String city;
+
+    /** The state the lot resides in */
+    private String state;
+
+    /** The zip code of the lot */
+    private String zip;
+
     /** The ID of the group this lot belongs to. */
     private String groupId;
 
@@ -60,10 +72,14 @@ public class Lot {
      * @param currentVolume the current volume of the lot
      * @param capacity the maximum capacity of the lot
      */
-    public Lot(String groupId, String name, Integer currentVolume, Integer capacity) {
+    public Lot(String groupId, String name, Integer currentVolume, Integer capacity, String address, String city, String state, String zip) {
         this.groupId = groupId;
         this.name = name;
         this.currentVolume = currentVolume;
         this.capacity = capacity;
+        this.address = address;
+        this.city = city;
+        this.state = state;
+        this.zip = zip;
     }
 }
