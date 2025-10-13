@@ -1,9 +1,12 @@
 package com.lotlytics.api.services;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import com.lotlytics.api.entites.exceptions.ConflictException;
+import com.lotlytics.api.entites.exceptions.NotFoundException;
 import com.lotlytics.api.entites.user.CreateUserPayload;
 import com.lotlytics.api.entites.user.User;
 import com.lotlytics.api.repositories.UserRepository;
@@ -70,7 +73,8 @@ public class UserService {
             throw new ConflictException("User already is using this email.");
         }
         
-        User u = new User(username, email, payload.getPassword());
+        String hashedPassword = passwordService.hashPassword(payload.getPassword());
+        User u = new User(username, email, hashedPassword);
         User out = userRepository.save(u);
         log.info("User '" + username + "' created");
         return out;
@@ -82,5 +86,20 @@ public class UserService {
      */
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    /**
+     * The getUserByUsername method returns a user by checking the username in the database.
+     * @return A User.
+     * @throws NotFoundException
+     */
+    public User getUserByUsername(String username) throws NotFoundException {
+        User u = new User();
+        u.setUsername(username);
+        Optional<User> out = userRepository.findOne(Example.of(u));
+        if (out.isEmpty()) {
+            throw new NotFoundException("User does not exist");
+        }
+        return out.get();
     }
 }

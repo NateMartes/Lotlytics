@@ -12,7 +12,7 @@ import lombok.Getter;
 @Getter
 public class CreateUserPayload {
     /** The username of a user */
-    @Size(max = 255, message = "Usernames cannot be greater than 255 characters")
+    @Size(max = 255, min = 6, message = "Usernames cannot be greater than 255 and cannot be less than 6 characters")
     private String username;
 
     /** The email of a user */
