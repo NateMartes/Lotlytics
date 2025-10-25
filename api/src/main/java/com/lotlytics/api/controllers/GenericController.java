@@ -60,7 +60,6 @@ public abstract class GenericController {
             log.error("Unhandled Exception::" + e.getClass().getSimpleName() + " : " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Throwable t) {
-            System.out.println(t.toString());
             log.error("Unhandled Throwable::" + t.getClass().getSimpleName() + " : " + t.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

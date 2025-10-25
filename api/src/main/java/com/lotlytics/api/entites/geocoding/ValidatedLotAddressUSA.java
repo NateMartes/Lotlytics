@@ -29,8 +29,8 @@ public class ValidatedLotAddressUSA {
     }
 
     /**
-     * This constructor handles for when an address is valid, but outside the USA. Thenm we only set
-     * the valid isntance  and the inUSA instance variable. This constructor should only be called when
+     * This constructor handles for when an address is valid, but outside the USA. Then we only set
+     * the valid isntance and the inUSA instance variable. This constructor should only be called when
      * a address is valid and it is outside of the USA.
      * 
      * @param valid a boolean value
