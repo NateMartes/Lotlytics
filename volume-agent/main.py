@@ -10,6 +10,9 @@ import math
 import toml
 import logging
 import requests
+import httpx
+import asyncio
+import threading
 
 
 """Defined Directions the objects can take. These values will be sent to the server for event capturing"""
@@ -183,7 +186,7 @@ class ObjectTracker:
     RIGHT_TO_LEFT = [ObjectState.ON_LINE_B, ObjectState.BETWEEN_LINES, ObjectState.ON_LINE_A]
     LEFT_TO_RIGHT = [ObjectState.ON_LINE_A, ObjectState.BETWEEN_LINES, ObjectState.ON_LINE_B]
 
-    def __init__(self, keep_alive_frames, min_hits, iou_threshold, group_name, server, line_start, line_gap, entrance_side, exit_side, mode):
+    def __init__(self, keep_alive_frames, min_hits, iou_threshold, group_name, lot_id, server, line_start, line_gap, entrance_side, exit_side, mode):
         """
         The ObjectTracker class handles objects based on detections from the ML model.
         Args:
@@ -191,6 +194,7 @@ class ObjectTracker:
             min_hits: The amount of miniumn to see a specifc object before considering it to exist.
             iou_threshold: The percentage of difference between objects before consider it to be a new object.
             group_name: The name of the group this agent is apart of.
+            lot_id: The lot this agent is apart of.
             line_start: The beginning pixel of the first line.
             line_gap: How far apart the lines are from each other in pixels.
             entrance_side: The side of the camera that is the entrance of the lot (From the Camera's POV).
@@ -202,28 +206,67 @@ class ObjectTracker:
         self.volume = 0
         self.keep_alive_frames = keep_alive_frames
         self.group_name = group_name
+        self.lot_id = lot_id
         self.server = server
         self.line_a_pos = line_start
         self.line_b_pos = line_start + line_gap
         self.mode = mode
         self.entrance_side = entrance_side,
         self.exit_side = exit_side
+        self.logger = logging.getLogger("volume-agent")
 
-    def send_to_sever(self, value):
+        # Allow for background requests
+        self.loop = asyncio.new_event_loop()
+        threading.Thread(target=self._run_loop, daemon=True).start()
+
+    def schedule_server_message(self, value):
         """
-        The send_to_server method sends an increment or decrement to the volume of this area.
+        Schedule to send a message to the agent's server in some future point in time. This method also handles logging in the
+        event of an Exception occuring in the thread that the message is being sent on.
         Args:
             value: Either 1 or -1 to increment or decrement.
         """
+
+        future = asyncio.run_coroutine_threadsafe(self._send_to_sever(value), self.loop)
+
+        try:
+            future.result()
+        except Exception as e:
+            self.logger.error(f"Failed to send message with value {value}:: {e}")
+            sys.exit(2)
+            
+    
+    async def _send_to_sever(self, value):
+        """
+        The _send_to_server method sends an increment or decrement to the volume of this area.
+        Args:
+            value: Either 1 or -1 to increment or decrement. Value is some enumerated type.
+        """
         capture_time = datetime.now(timezone.utc)
         data = {
-            "captured_at": str(capture_time),
-            "value": value,
-            "group": self.group_name
+            "capturedAt": str(capture_time),
+            "value": value.value,
         }
+        params = {"groupId": self.group_name, "lotId": self.lot_id}
 
-        # requests.post(self.server, data=data)
+        async with httpx.AsyncClient() as client:
+            response = await client.post(self.server, json=data, params=params)
+            response.raise_for_status()
 
+    def _run_loop(self):
+        """
+        The _run_loop method runs an async event loop in the backgroud for the ObjectTracker. This is needed
+        to send updates to some given server over a network without request blocking.
+        """
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_forever()
+
+    def cleanup(self):
+        """
+        The cleanup methods is called when the object tracker is no longer being used.
+        """
+        self.loop.stop()
+        
     def update_SORT_tracker(self, detections):
         """
         The update_SORT_tracker updates the simple, online and realtime tracker that
@@ -305,10 +348,10 @@ class ObjectTracker:
         """
         EnteredOrExited = False
         if self.is_entering(tracked_object):
-            self.send_to_sever(Direction.ENTERING)
+            self.schedule_server_message(Direction.ENTERING)
             EnteredOrExited = True
         elif self.is_exiting(tracked_object):
-            self.send_to_sever(Direction.EXITING)
+            self.schedule_server_message(Direction.EXITING)
             EnteredOrExited = True
 
         if EnteredOrExited:
@@ -338,6 +381,7 @@ class ObjectTracker:
     def update_tracked_items(self, detections):
         """
         The update_tracked_items method updates the items in the Object Tracker, making event updates if needed.
+
         Args:
             detections: The detected objects from the ML model
         Returns:
@@ -350,7 +394,7 @@ class ObjectTracker:
         
 
 class VolumeAgent:
-    def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, group_name, server, entrance_side, exit_side, mode="production", exit_key='q'):
+    def __init__(self, objects, confidence, model_path, keep_alive_frames, min_hits, iou_threshold, line_gap, line_start, group_name, lot, server, entrance_side, exit_side, mode="production", exit_key='q'):
         """
         The VolumeAgent class keeps track of the list of objects it has seen an agggreates the result.
         Args:
@@ -363,6 +407,7 @@ class VolumeAgent:
             line_start: The pixel to start the first line.
             line_gap: The distance between both lines on the camera.
             group_name: The group name this agent is apart of.
+            lot: The id of the lot this agent is apart of.
             server: URI to send event data to.
             entrance_side: The side of the camera that is the entrance of the lot (From the Camera's POV).
             exit_side: The side of the camera that is the exit of the lot (From the Camera's POV).
@@ -373,7 +418,7 @@ class VolumeAgent:
         self.confidence = confidence
         self.camera = Camera(name="Volume Agent")
         self.model = YOLO(model_path)
-        self.obj_tracker = ObjectTracker(keep_alive_frames, min_hits, iou_threshold, group_name, server, line_start, line_gap, entrance_side, exit_side, mode=mode)
+        self.obj_tracker = ObjectTracker(keep_alive_frames, min_hits, iou_threshold, group_name, lot, server, line_start, line_gap, entrance_side, exit_side, mode=mode)
         self.line_gap = line_gap
         self.line_start = line_start
         self.group_name = group_name
@@ -476,6 +521,7 @@ class VolumeAgent:
                 self.logger.info("=================")
 
         self.camera.shutdown()
+        self.obj_tracker.cleanup()
 
 if __name__ == "__main__":
 
@@ -509,6 +555,7 @@ if __name__ == "__main__":
         line_start=int(config["line_start"]),
         line_gap=int(config["line_gap"]),
         group_name=config["group"],
+        lot=config["lot"],
         server=config["data_server"],
         entrance_side=entrance,
         exit_side=exit,

@@ -34,7 +34,10 @@ entrance_side = "right"
 exit_side = "left"
 
 # Location of where to send data to over https
-data_server = "http://localhost:6600"
+data_server = "http://localhost/api/v1/event"
 
 # The group this agent is apart of
-group = "group-a"
+group = "wilkes-1a2b3c4d"
+
+# The lot this agent is apart of
+lot = "1"
