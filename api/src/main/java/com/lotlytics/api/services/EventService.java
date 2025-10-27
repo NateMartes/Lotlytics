@@ -87,6 +87,10 @@ public class EventService {
         if (!lotService.isALot(lotId)) {
             throw new NotFoundException("Lot Id does not exist");
         }
+
+        // This should be changed to some different form of updating...
+        lotService.incrementLotVolume(groupId, lotId, event.getValue());
+
         Event out = eventRepository.saveEvent(groupId, lotId, event);
         log.info("Saved Event for lot " + lotId + " for " + groupId + " with value " + event.getValue());
         return out;

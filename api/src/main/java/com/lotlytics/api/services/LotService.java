@@ -229,4 +229,36 @@ public class LotService {
         lotRepository.deleteAll(entites);
         log.info("Removed all lots for "+groupId);
     }
+
+    /**
+     * The incrementLotVolume method increments the volume of a specifc lot's volume.
+     * If the volume of the lot would surpass the capacity of it, the lot is not incremented.
+     * The volume of the lot also does not go below 0.
+     * 
+     * @param groupId The id of the group
+     * @param lotId The id of the lot
+     * @param value some value to modify the lot by.
+     * 
+     * @return True if the volume has been changed, false if the volume has not.
+     * @throws NotFoundException
+     * 
+     */
+
+     public boolean incrementLotVolume(String groupId, int lotId, int value) {
+        Lot l = getLot(groupId, lotId);
+        Integer volume = l.getCurrentVolume();
+        Integer capacity = l.getCapacity();
+
+        Integer newVolume = volume + value;
+
+        if (newVolume > capacity || newVolume < 0) {
+            return false;
+        }
+        
+        PutLotPayload newLot = new PutLotPayload();
+        newLot.setVolume(newVolume);
+        putLot(groupId, lotId, newLot);
+
+        return true;
+     }
 }

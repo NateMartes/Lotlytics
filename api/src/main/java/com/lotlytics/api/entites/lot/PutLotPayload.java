@@ -4,12 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.AllArgsConstructor;
 
 /*
  * Represents the payload used to update an existing Lot.
  */
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor 
 @JsonInclude(JsonInclude.Include.NON_NULL)
