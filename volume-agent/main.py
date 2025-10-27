@@ -105,6 +105,7 @@ class TrackedObject:
         self.set_center()
         self.set_alive_frames(alive_frames)
         self.state = None
+        self.counted = False
         self.object_path = []
         self.state = self.set_tracked_object_state(line_a_pos, line_b_pos, line_tolerance)
 
@@ -179,6 +180,18 @@ class TrackedObject:
     
     def __str__(self):
         return f"TrackedObject[{self.id}][{self.state}][({self.x1}, {self.y1}) ({self.x2}, {self.y2})][AliveTime: {self.frames}][Path: {self.object_path}]"
+    
+    def set_counted(self, value):
+        """
+        Sets this object has a counted object.
+        """
+        self.counted = value
+
+    def was_counted(self):
+        """
+        Determines if this object has been counted.
+        """
+        return self.counted
                
 class ObjectTracker:
 
@@ -211,7 +224,7 @@ class ObjectTracker:
         self.line_a_pos = line_start
         self.line_b_pos = line_start + line_gap
         self.mode = mode
-        self.entrance_side = entrance_side,
+        self.entrance_side = entrance_side
         self.exit_side = exit_side
         self.logger = logging.getLogger("volume-agent")
 
@@ -346,6 +359,9 @@ class ObjectTracker:
         Args:
             tracked_object: The current object
         """
+        if tracked_object.was_counted():
+            return
+        
         EnteredOrExited = False
         if self.is_entering(tracked_object):
             self.schedule_server_message(Direction.ENTERING)
@@ -355,7 +371,7 @@ class ObjectTracker:
             EnteredOrExited = True
 
         if EnteredOrExited:
-            self.object_history.pop(tracked_object.id)
+            tracked_object.set_counted(True)
 
     def remove_old_objects(self, tracked_objects):
         """
