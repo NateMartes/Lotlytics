@@ -19,6 +19,14 @@ import lombok.Setter;
 public class SecurityProperties {
 
     /** The strength of the password, defined by the BCryptPasswordEncoder */
-    private Integer passwordStrength;
+    private Integer passwordStrength = 15;
 
+    /** A comma seperated list of domains that are allowed to access this API */
+    private String corsAllowOrigin = "*";
+
+    /** A comma seperated list of methods that are allowed by this API */
+    private String corsAllowMethods = "*";
+
+    /** A comma seperated list of headers that are allowed by this API */
+    private String corsAllowHeaders = "*";
 }
