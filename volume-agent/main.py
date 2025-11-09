@@ -41,7 +41,7 @@ class Camera:
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             print("Error: Could not open Camera", file=sys.stderr)
-            exit(1)
+            sys.exit(1)
 
         self.name = name
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)

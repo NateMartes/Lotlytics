@@ -1,5 +1,5 @@
 # production or testing
-mode = "testing"
+mode = "production"
 
 # Objects to be recongized. Objects can added from the COCO dataset https://docs.ultralytics.com/datasets/detect/coco/
 valid_objects = ["person", "car", "motorbike","bus","truck", "cell phone"]
@@ -8,7 +8,7 @@ valid_objects = ["person", "car", "motorbike","bus","truck", "cell phone"]
 model_path = "./yolov8n.pt"
 
 # Confidence percentage to accept objects at
-confidence_percentage = "0.70"
+confidence_percentage = "0.30"
 
 # Keep alive frames are how many frames are allowed for the object not to be seen before it is forgotten
 keep_alive_frames = 30
