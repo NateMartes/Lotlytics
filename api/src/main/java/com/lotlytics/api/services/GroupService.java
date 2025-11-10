@@ -89,7 +89,7 @@ public class GroupService {
      * 
      * @param groupId The Id of a group.
      */
-    public void deleteGroup(String groupId) {
+    public void deleteGroup(String groupId) throws NotFoundException {
         if (!isAGroup(groupId)) {
             throw new NotFoundException("Group Id does not exist");
         }

@@ -32,8 +32,14 @@ CREATE TABLE group_members (
     id SERIAL PRIMARY KEY,
     group_id VARCHAR(255) NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role VARCHAR(50) DEFAULT 'member',
+    role_id INT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     UNIQUE (group_id, user_id)
+);
+
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
 -- Trigger for auto-updating 'updated_at'
