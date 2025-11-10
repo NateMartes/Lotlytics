@@ -6,9 +6,11 @@ info:
     The **Lotlytics API** is a RESTful service that provides programmatic access 
     to the resources and data used by the Lotlytics platform.
   
-    It is organized around three primary endpoints:
+    It is organized around several primary endpoints:
       - **/lot** — Manage and retrieve parking lot resources.
       - **/group** — Access and manage parking lot group resources.
+      - **/group/member** — Manage group members and their roles.
+      - **/role** — Manage roles that can be assigned to group members.
       - **/event** — Create, and record event data.
   
     All endpoints follow RESTful principles and are stateless, ensuring 
@@ -190,6 +192,176 @@ paths:
       responses:
         '204':
           description: Group deleted
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+  /api/v1/group/member:
+    get:
+      tags:
+        - /group
+      operationId: getGroupMembers
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved list of group members
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMemberArray'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    post:
+      tags:
+        - /group
+      operationId: createGroupMember
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupMemberPayload'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+        '409':
+          description: Conflict — The user is already a member of the group
+    put:
+      tags:
+        - /group
+      operationId: putGroupMember
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutGroupMemberPayload'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMember'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    delete:
+      tags:
+        - /group
+      operationId: deleteGroupMember
+      parameters:
+        - name: groupId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Group member deleted
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+  /api/v1/role:
+    get:
+      tags:
+        - /role
+      operationId: getRoles
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved list of roles
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/RoleArray'
+                  - $ref: '#/components/schemas/Role'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '404':
+          description: Not Found — The requested resource could not be found
+    post:
+      tags:
+        - /role
+      operationId: createRole
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRolePayload'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          description: Bad Request — The request was invalid or missing required parameters.
+        '409':
+          description: Conflict — A role with the same name already exists
+    delete:
+      tags:
+        - /role
+      operationId: deleteRole
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Role deleted
         '400':
           description: Bad Request — The request was invalid or missing required parameters.
         '404':
@@ -503,3 +675,129 @@ components:
         - groupId
         - value
         - capturedAt
+    CreateGroupMemberPayload:
+      type: object
+      required:
+        - userId
+        - roleId
+      properties:
+        userId:
+          type: integer
+          format: int32
+          description: The ID of the user to add as a group member.
+          example: 1
+        roleId:
+          type: integer
+          format: int32
+          description: The ID of the role to assign to the user.
+          example: 2
+    PutGroupMemberPayload:
+      type: object
+      required:
+        - roleId
+      properties:
+        roleId:
+          type: integer
+          format: int32
+          description: The ID of the role to assign to the user.
+          example: 2
+    GroupMemberArray:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            description: The unique identifier for the group member. Primary key in the database.
+            example: 1
+          groupId:
+            type: string
+            description: The ID of the group this member belongs to.
+            example: "city-lots-3erdfga0"
+          userId:
+            type: integer
+            description: The ID of the user who is a member of the group.
+            example: 1
+          roleId:
+            type: integer
+            description: The ID of the role assigned to this user in the group.
+            example: 2
+        required:
+          - id
+          - groupId
+          - userId
+          - roleId
+    GroupMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the group member. Primary key in the database.
+          example: 1
+        groupId:
+          type: string
+          description: The ID of the group this member belongs to.
+          example: "city-lots-3erdfga0"
+        userId:
+          type: integer
+          description: The ID of the user who is a member of the group.
+          example: 1
+        roleId:
+          type: integer
+          description: The ID of the role assigned to this user in the group.
+          example: 2
+      required:
+        - id
+        - groupId
+        - userId
+        - roleId
+    CreateRolePayload:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          description: The name of the role.
+          example: "Administrator"
+    RoleArray:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            description: The unique identifier for the role. Primary key in the database.
+            example: 1
+          name:
+            type: string
+            description: The name of the role.
+            example: "Administrator"
+          createdAt:
+            type: string
+            format: date-time
+            description: The timestamp when the role was created.
+            example: "2025-10-11T14:23:00Z"
+        required:
+          - id
+          - name
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the role. Primary key in the database.
+          example: 1
+        name:
+          type: string
+          description: The name of the role.
+          example: "Administrator"
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp when the role was created.
+          example: "2025-10-11T14:23:00Z"
+      required:
+        - id
+        - name
