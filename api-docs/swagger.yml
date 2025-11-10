@@ -468,6 +468,22 @@ components:
             type: integer
             description: The maximum capacity of the lot.
             example: 100
+          street:
+            type: string
+            description: The street the parking lot is on.
+            example: "123 Main Street"
+          city:
+            type: string
+            description: The city the parking lot is in.
+            example: "Newark"
+          state:
+            type: string
+            description: The state the parking lot is in.
+            example: "New Jersey"
+          zip:
+            type: string
+            description: The zip code the parking lot is in.
+            example: "07102"
           createdAt:
             type: string
             format: date-time
@@ -540,6 +556,26 @@ components:
         volume:
           type: integer
           format: int32
+        street:
+          type: string
+          maxLength: 255
+          description: The street the parking lot is on.
+          example: "123 Main Street"
+        city:
+          type: string
+          maxLength: 255
+          description: The city the parking lot is in.
+          example: "Newark"
+        state:
+          type: string
+          maxLength: 255
+          description: The state the parking lot is in.
+          example: "New Jersey"
+        zip:
+          type: string
+          maxLength: 20
+          description: The zip code the parking lot is in.
+          example: "07102"
     CreateLotPayload:
       type: object
       properties:
@@ -556,15 +592,23 @@ components:
         street:
           type: string
           maxLength: 255
+          description: The street the parking lot is on.
+          example: "123 Main Street"
         city:
           type: string
           maxLength: 255
+          description: The city the parking lot is in.
+          example: "Newark"
         state:
           type: string
           maxLength: 255
+          description: The state the parking lot is in.
+          example: "New Jersey"
         zip:
           type: string
-          maxLength: 255
+          maxLength: 20
+          description: The zip code the parking lot is in.
+          example: "07102"
     CreateGroupPayload:
       type: object
       properties:

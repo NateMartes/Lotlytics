@@ -1,6 +1,6 @@
 "use client"
 import { Input } from "@/components/ui/input"
-import { Lot, getMockLot } from "@/types/lot";
+import { Lot, createLot } from "@/types/lot";
 import { LotList } from "./lots";
 import { ChangeEvent, FormEvent, useState } from "react"
 
@@ -24,9 +24,19 @@ export default function Home() {
         return res.json()
       }
     }).then((data: Lot[]) => {
-      console.log(data);
-      data.map(() => getMockLot());
-      setSearchResults(data);
+      let lots = data.map((lot) => createLot(
+        lot.id, 
+        lot.name, 
+        lot.currentVolume, 
+        lot.capacity, 
+        lot.street, 
+        lot.city, 
+        lot.state, 
+        lot.zip, 
+        lot.createdAt, 
+        lot.updatedAt
+      ));
+      setSearchResults(lots);
     });
   }
 
