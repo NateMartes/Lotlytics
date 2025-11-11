@@ -7,12 +7,14 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card"
+import Image from 'next/image';
+import Map from "./map";
 
-type ResultProps = {
+interface ResultProps {
   results: Lot[] | null;
 };
 
-type LotItemProps = {
+interface LotItemProps {
     lot: Lot
 }
 
@@ -21,6 +23,15 @@ type LotLevel = {
     color: string
 }
 
+function getLotMapLinks() {
+    return (
+        <div className="flex gap-4">
+            <Image width="48" height="48" className="cursor-pointer" src="/apple.avif" alt="Apple Maps"/>
+            <Image width="48" height="48" className="cursor-pointer" src="/google.avif" alt="Google Maps"/>
+            <Image width="48" height="48" className="cursor-pointer" src="/waze.avif" alt="Waze"/>
+        </div>
+    )
+}
 function getLotLevel(volume: number, capacity: number) {
     const levelColors: LotLevel[] = [
         {
@@ -49,18 +60,22 @@ function getLotLevel(volume: number, capacity: number) {
 
 export function LotItem({ lot }: LotItemProps) {
     const { text, color } = getLotLevel(lot.currentVolume, lot.capacity);
-    console.log(color);
     return (
-        <Card>
+        <Card className="min-w-100">
             <CardHeader>
                 <div>
-                    <p>{lot.name}</p>
-                    <p className={color}>{text}</p>
-                    <p>{lot.currentVolume} out of {lot.capacity}</p>
+                    <div className="flex gap-2 place-items-center">
+                        <p className="max-w-50">{lot.name}</p>
+                        <span className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${color}`}>
+                            {text}
+                        </span>
+                    </div>
+                    <Map street={lot.street} city={lot.city} state={lot.state} zip={lot.zip}/>
+                    <p className="text-sm text-muted-foreground">{lot.currentVolume} / {lot.capacity}</p>
                 </div>
             </CardHeader>
-            <CardContent>{lot.street}, {lot.city}, {lot.state}, {lot.zip}</CardContent>
-            <CardFooter>Put some links down here</CardFooter>
+            <CardContent><p className="max-w-100 text-sm text-wrap">{lot.street}, {lot.city}, {lot.state}, {lot.zip}</p></CardContent>
+            <CardFooter>{getLotMapLinks()}</CardFooter>
         </Card>
     );
 }
@@ -69,7 +84,7 @@ export function LotList({ results }: ResultProps) {
     if (!results) return;
 
     return (
-        <div>
+        <div className="flex max-w-300 justify-center gap-4 flex-wrap">
             {results.map((lot: Lot, index: number) => <LotItem key={index} lot={lot} />)}
         </div>
     );

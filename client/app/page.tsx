@@ -3,10 +3,12 @@ import { Input } from "@/components/ui/input"
 import { Lot, createLot } from "@/types/lot";
 import { LotList } from "./lots";
 import { ChangeEvent, FormEvent, useState } from "react"
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Home() {
 
   const [searchInput, setSearchInput] = useState("");
+  const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Lot[] | null>(null);
 
   const handleInputUpdate = (event: ChangeEvent<HTMLInputElement>) => {
@@ -17,7 +19,8 @@ export default function Home() {
   const handleSearchSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    const url = "http://localhost/api/v1/lot?groupId=wilkes-1a2b3c4d"
+    setSearching(true);
+    const url = "http://localhost/api/v1/lot"
 
     fetch(url).then((res: Response) => {
       if (res.ok) {
@@ -36,6 +39,7 @@ export default function Home() {
         lot.createdAt, 
         lot.updatedAt
       ));
+      setSearching(false);
       setSearchResults(lots);
     });
   }
@@ -43,8 +47,8 @@ export default function Home() {
   return (
     <>
       <div className="flex flex-col place-items-center mt-5 text-2xl lg:text-3xl gap-4">
-          <p>Make Your Traveling Less Stressful</p>
-          <form className="flex w-full justify-center gap-4" onSubmit={(event: FormEvent) => handleSearchSubmit(event)}>
+          <p className="text-center">Make Your Traveling Less Stressful</p>
+          <form className="flex w-full p-4 justify-center gap-4" onSubmit={(event: FormEvent) => handleSearchSubmit(event)}>
             <Input className="max-w-lg text-xl" type="search" placeholder="Find a Parking Lot" onChange={(event: ChangeEvent<HTMLInputElement>) => handleInputUpdate(event)}/>
             <button type="submit" className="cursor-pointer">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-8">
@@ -52,7 +56,21 @@ export default function Home() {
               </svg>
             </button>
           </form>
-          {searchResults ? <LotList results={searchResults}/> : null}
+          {searching ? 
+            <div className="flex place-items-center gap-5 mt-10">
+              <p>Searching for Parking Lots</p>
+              <Spinner className="size-12" />
+            </div>
+          : null}
+          {searchResults ?
+            <div className="p-4">
+              <LotList results={searchResults}/> 
+            </div>
+            : !searchResults && !searching ? 
+                <div className="p-4">
+                  <p>No Parking Lots Just Yet ...</p>
+                </div>
+                : null}
       </div>
     </>
   );

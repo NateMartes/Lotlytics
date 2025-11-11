@@ -9,10 +9,10 @@ export function Navigation() {
   return (
     <nav className="flex text-2xl text-white p-5 justify-between w-screen bg-blue-900 shadow-md z-50">
       <div>
-        <Image src="/Lotlytics.png" alt="Lotlytics" width="80" height="80"/>
+        <Image src="/Lotlytics.avif" alt="Lotlytics" width="60" height="60"/>
       </div>
       <NavigationMenu>
-        <NavigationMenuList className="min-w-md flex justify-end gap-4">
+        <NavigationMenuList className="md:min-w-md flex justify-end gap-4">
           <NavigationMenuItem>
               <p>About</p>
           </NavigationMenuItem>
