@@ -100,6 +100,15 @@ public class LotService {
     }
 
     /**
+     * The getLots method gets all known lots.
+     * 
+     * @return A list of lots.
+     */
+    public List<Lot> getLots() {
+        return lotRepository.findAll();
+    }
+
+    /**
      * The postLot method creates a new lot.
      *  
      * @param payload The CreateLotPayload that defines a new lot.

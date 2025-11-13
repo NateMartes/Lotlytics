@@ -43,7 +43,18 @@ public class LotController extends GenericController {
     }
 
     /**
-     * The getGroup method handles the /api/v1/lot?groupId=someVal endpoint.
+     * The getAllLots method handles the /api/v1/lot endpoint.
+     * 
+     * @return A list of all know lots
+     */
+    @GetMapping()
+    public ResponseEntity<?> getEveryLot() {
+        log.info(String.format(endpointMsg, "GET", ""));
+        return callServiceMethod(() -> lotService.getLots(), HttpStatus.OK);
+    }
+
+    /**
+     * The getAllLots method handles the /api/v1/lot?groupId=someVal endpoint.
      * The method throws a 404 if the groupId does not exist.
      * 
      * @param groupId The Id of the group the lot belongs to.

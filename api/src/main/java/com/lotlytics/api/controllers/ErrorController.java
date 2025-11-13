@@ -8,10 +8,13 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import com.lotlytics.api.entites.ErrorMessage;
 
+import lombok.extern.slf4j.Slf4j;
+
 /*
  * The ErrorController Class sends error messages over HTTP
  * In the even the server suffers an internal error.
  */
+@Slf4j
 @ControllerAdvice
 public class ErrorController extends ResponseEntityExceptionHandler {
 
@@ -24,6 +27,7 @@ public class ErrorController extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public final ResponseEntity<ErrorMessage> handleAllExceptions(Exception ex) {
+        log.error("Unhandled exception in ErrorController: " + ex.getClass().getSimpleName(), ex);
         ErrorMessage error = new ErrorMessage("Server Error");
         return new ResponseEntity<ErrorMessage>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
