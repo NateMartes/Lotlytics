@@ -241,13 +241,6 @@ class ObjectTracker:
         """
 
         future = asyncio.run_coroutine_threadsafe(self._send_to_sever(value), self.loop)
-
-        try:
-            future.result()
-        except Exception as e:
-            self.logger.error(f"Failed to send message with value {value}:: {e}")
-            sys.exit(2)
-            
     
     async def _send_to_sever(self, value):
         """
