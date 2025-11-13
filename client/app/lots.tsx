@@ -1,24 +1,22 @@
+import { ForwardedRef, forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { Lot } from "@/types/lot";
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
 } from "@/components/ui/card"
 import Image from 'next/image';
 import Map from "./map";
 
-interface ResultProps {
-  results: Lot[] | null;
-};
+type LotOccupancyLevel = "low" | "medium" | "high";
 
 interface LotItemProps {
     lot: Lot
 }
 
 type LotLevel = {
+    level: LotOccupancyLevel,
     text: string,
     color: string
 }
@@ -33,23 +31,22 @@ function getLotMapLinks() {
     )
 }
 function getLotLevel(volume: number, capacity: number) {
-    const levelColors: LotLevel[] = [
-        {
+    const levelColors: LotLevel[] = [{
+            level: "low",
             text: "Low",
             color: "bg-[#66BB6A]"
-        },
-        {
-            text: "Normal",
+        },{
+            level: "medium",
+            text: "Medium",
             color: "bg-[#BDBDBD]"
-        },
-        {
+        },{
+            level: "high",
             text: "High",
             color: "bg-[#E57373]"
-        },
-    ];
+        }];
 
-    let percentage = (volume / capacity) * 100.00;
-    if (percentage < 33.00) {
+    let percentage = capacity > 0 ? (volume / capacity) * 100.00 : 0;
+    if (percentage <= 33.00) {
         return levelColors[0]
     } else if (percentage > 33.00 && percentage < 66.00) {
         return levelColors[1]
@@ -69,6 +66,11 @@ export function LotItem({ lot }: LotItemProps) {
                         <span className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${color}`}>
                             {text}
                         </span>
+                        <a className="justify-self-end-safe">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                            </svg>
+                        </a>
                     </div>
                     <Map street={lot.street} city={lot.city} state={lot.state} zip={lot.zip}/>
                     <p className="text-sm text-muted-foreground">{lot.currentVolume} / {lot.capacity}</p>
@@ -80,12 +82,108 @@ export function LotItem({ lot }: LotItemProps) {
     );
 }
 
-export function LotList({ results }: ResultProps) {
-    if (!results) return;
+type LotFilterOption = "all" | LotOccupancyLevel;
+
+export type LotListHandle = {
+    setLots: (lots: Lot[]) => void;
+    clearLots: () => void;
+    setFilter: (filter: LotFilterOption) => void;
+};
+
+interface LotListProps {
+    hasSearched: boolean;
+}
+
+const filterOptions: { label: string; value: LotFilterOption; color: string }[] = [
+    { label: "All", value: "all", color: "grey"},
+    { label: "Low", value: "low", color: "bg-[#66BB6A]"},
+    { label: "Medium", value: "medium", color: "bg-[#BDBDBD]"},
+    { label: "High", value: "high", color: "bg-[#E57373]"}
+];
+
+function LotListComponent({ hasSearched }: LotListProps, ref: ForwardedRef<LotListHandle>) {
+    const [lots, setLots] = useState<Lot[]>([]);
+    const [selectedFilter, setSelectedFilter] = useState<LotFilterOption>("all");
+
+    useImperativeHandle(ref, () => ({
+        setLots: (incomingLots: Lot[]) => {
+            setLots(incomingLots ?? []);
+        },
+        clearLots: () => {
+            setLots([]);
+        },
+        setFilter: (filter: LotFilterOption) => {
+            setSelectedFilter(filter);
+        }
+    }), []);
+
+    const filteredLots = useMemo(() => {
+        if (selectedFilter === "all") {
+            return lots;
+        }
+
+        return lots.filter((lot: Lot) => {
+            const { level } = getLotLevel(lot.currentVolume, lot.capacity);
+            return level === selectedFilter;
+        });
+    }, [lots, selectedFilter]);
+
+    const hasLots = lots.length > 0;
+    const hasFilteredLots = filteredLots.length > 0;
 
     return (
-        <div className="flex max-w-300 justify-center gap-4 flex-wrap">
-            {results.map((lot: Lot, index: number) => <LotItem key={index} lot={lot} />)}
+        <div className="flex flex-col max-w-400 mx-auto">
+            {hasLots ? (
+                <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+                    {filterOptions.map(({ label, value }) => {
+                        const isActive = selectedFilter === value;
+                        let colorClass = "hover:bg-muted"
+                        switch(value) {
+                            case "low":
+                                colorClass = "hover:bg-[#66BB6A]";
+                                break;
+                            case "medium":
+                                colorClass = "hover:bg-[#BDBDBD]";
+                                break;
+                            case "high":
+                                colorClass = "hover:bg-[#E57373]";
+                                break;
+                        }
+                        return (
+                            <button
+                                key={value}
+                                type="button"
+                                onClick={() => setSelectedFilter(value)}
+                                className={`rounded-full border px-4 py-2 text-base transition ${
+                                    isActive
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : "bg-background text-foreground border-muted " + colorClass
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        );
+                    })}
+                </div>
+            ) : null}
+
+            {!hasLots && hasSearched ? (
+                <p className="text-center text-base text-muted-foreground">No parking lots just yet...</p>
+            ) : null}
+
+            {hasLots && !hasFilteredLots ? (
+                <p className="text-center text-base text-muted-foreground">No parking lots match this filter.</p>
+            ) : null}
+
+            {hasFilteredLots ? (
+                <div className="flex justify-center gap-4 flex-wrap">
+                    {filteredLots.map((lot: Lot, index: number) => (
+                        <LotItem key={`${lot.id}-${index}`} lot={lot} />
+                    ))}
+                </div>
+            ) : null}
         </div>
     );
 }
+
+export const LotList = forwardRef<LotListHandle, LotListProps>(LotListComponent);

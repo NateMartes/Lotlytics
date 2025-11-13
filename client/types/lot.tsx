@@ -1,5 +1,6 @@
 export interface Lot {
   id: number;
+  groupId: string;
   name: string;
   currentVolume: number;
   capacity: number;
@@ -12,7 +13,8 @@ export interface Lot {
 }
 
 export function createLot(
-    id: number, 
+    id: number,
+    groupId: string,
     name: string, 
     currentVolume: number,
     capacity: number,
@@ -25,6 +27,7 @@ export function createLot(
 
     let lot: Lot = {
         id: id,
+        groupId: groupId,
         name: name,
         currentVolume: currentVolume,
         capacity: capacity,
@@ -40,7 +43,9 @@ export function createLot(
 }
 
 export function getMockLot(): Lot {
-    return { id: 0, name: "Unnamed Lot", 
+    return { id: 0,
+            groupId: "soemthing-duedd33",
+            name: "Unnamed Lot", 
             currentVolume: 0, 
             capacity: 0, 
             street: "Some Street", 

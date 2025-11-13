@@ -1,20 +1,19 @@
 "use client"
 import { Input } from "@/components/ui/input"
 import { Lot, createLot } from "@/types/lot";
-import { LotList } from "./lots";
-import { ChangeEvent, FormEvent, useState } from "react"
+import { LotList, LotListHandle } from "./lots";
+import { FormEvent, useRef, useState } from "react"
 import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function Home() {
 
   const [searchInput, setSearchInput] = useState("");
   const [searching, setSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<Lot[] | null>(null);
-
-  const handleInputUpdate = (event: ChangeEvent<HTMLInputElement>) => {
-    let element = event.target;
-    setSearchInput(element.value);
-  }
+  const [hasSearched, setHasSearched] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const lotListRef = useRef<LotListHandle>(null);
 
   const handleSearchSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -22,55 +21,73 @@ export default function Home() {
     setSearching(true);
     const url = "http://localhost/api/v1/lot"
 
-    fetch(url).then((res: Response) => {
-      if (res.ok) {
-        return res.json()
-      }
-    }).then((data: Lot[]) => {
-      let lots = data.map((lot) => createLot(
-        lot.id, 
-        lot.name, 
-        lot.currentVolume, 
-        lot.capacity, 
-        lot.street, 
-        lot.city, 
-        lot.state, 
-        lot.zip, 
-        lot.createdAt, 
-        lot.updatedAt
-      ));
-      setSearching(false);
-      setSearchResults(lots);
-    });
+    fetch(url)
+      .then((res: Response) => {
+        if (!res.ok) {
+          throw new Error(`Unable to fetch parking lots. Status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data: Lot[]) => {
+        const lots = data.map((lot) => createLot(
+          lot.id,
+          lot.groupId,
+          lot.name, 
+          lot.currentVolume, 
+          lot.capacity, 
+          lot.street, 
+          lot.city, 
+          lot.state, 
+          lot.zip, 
+          lot.createdAt, 
+          lot.updatedAt
+        ));
+        lotListRef.current?.setLots(lots);
+        lotListRef.current?.setFilter("all");
+        setErrorMessage(null);
+      })
+      .catch((error: Error) => {
+        console.error("Error fetching lots:", error);
+        lotListRef.current?.clearLots();
+        setErrorMessage("We couldn't load parking lots right now. Please try again.");
+      })
+      .finally(() => {
+        setSearching(false);
+        setHasSearched(true);
+      });
   }
 
   return (
     <>
       <div className="flex flex-col place-items-center mt-5 text-2xl lg:text-3xl gap-4">
           <p className="text-center">Make Your Traveling Less Stressful</p>
-          <form className="flex w-full p-4 justify-center gap-4" onSubmit={(event: FormEvent) => handleSearchSubmit(event)}>
-            <Input className="max-w-lg text-xl" type="search" placeholder="Find a Parking Lot" onChange={(event: ChangeEvent<HTMLInputElement>) => handleInputUpdate(event)}/>
-            <button type="submit" className="cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-8">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-              </svg>
-            </button>
-          </form>
+          <Card className="md:min-w-2xl">
+            <form className="flex p-4 justify-center gap-4" onSubmit={(event: FormEvent) => handleSearchSubmit(event)}>
+                <Input
+                  type="text"
+                  value={searchInput}
+                  placeholder="Search for a Parking Lot..."
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <Button className="bg-blue-900 hover:bg-blue-400" disabled={searching}>
+                  {searching ? 'Loading...' : 'Search'}
+                </Button>
+            </form>
+          </Card>
           {searching ? 
             <div className="flex place-items-center gap-5 mt-10">
-              <p>Searching for Parking Lots</p>
+              <p className="p-4 mt-50 mb-50">Searching for Parking Lots</p>
               <Spinner className="size-12" />
             </div>
-          : null}
-          {searchResults ?
-            <div className="p-4">
-              <LotList results={searchResults}/> 
+          : null} 
+          {errorMessage ? (
+            <div className="p-4 mt-4 text-center text-red-500 text-base">
+              {errorMessage}
             </div>
-            : !searchResults && !searching ? 
-                <div className="p-4">
-                  <p>No Parking Lots Just Yet ...</p>
-                </div>
-                : null}
+          ) : null}
+          <div className="p-6 w-full">
+            <LotList ref={lotListRef} hasSearched={hasSearched} />
+          </div>
       </div>
     </>
   );

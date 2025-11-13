@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Navigation } from "./nav";
 import { Footer } from "./footer";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
   title: "Lotlytics | Make your Trips Easier",

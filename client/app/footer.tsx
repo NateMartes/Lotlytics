@@ -32,24 +32,7 @@ const Footer = ({
     url: "http://localhost:3000",
   },
   tagline = "All Your Parking Lots, Everywhere.",
-  menuItems = [
-    {
-      title: "Company",
-      links: [
-        { text: "About", url: "#" },
-        { text: "Contact", url: "#" },
-        { text: "Privacy", url: "#" },
-      ],
-    },
-    {
-      title: "Resources",
-      links: [
-        { text: "Help", url: "#" },
-        { text: "Sales", url: "#" },
-        { text: "Advertise", url: "#" },
-      ],
-    },
-  ],
+  menuItems = [],
   copyright = "© 2025 Put Something Here. All rights reserved.",
   bottomLinks = [
     { text: "Terms and Conditions", url: "#" },
@@ -58,7 +41,7 @@ const Footer = ({
 }: FooterProps) => {
   return (
     <section className="py-32 p-4">
-      <div className="container">
+      <div className="container min-w-full">
         <footer>
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
             <div className="col-span-2 mb-8 lg:mb-0">
