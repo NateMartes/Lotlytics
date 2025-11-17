@@ -1,5 +1,5 @@
 "use client"
-import { ChangeEvent, useState, useEffect, useRef, FormEvent } from "react"
+import { ChangeEvent, useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import MapComponent from "./map"
