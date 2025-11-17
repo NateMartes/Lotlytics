@@ -56,6 +56,7 @@ function getLotLevel(volume: number, capacity: number) {
 }
 
 export function LotItem({ lot }: LotItemProps) {
+    console.log(lot.street);
     const { text, color } = getLotLevel(lot.currentVolume, lot.capacity);
     return (
         <Card className="min-w-100">

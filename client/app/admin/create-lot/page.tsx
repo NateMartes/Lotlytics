@@ -1,9 +1,10 @@
 "use client"
-import { ChangeEvent, useState, useEffect } from "react"
+import { ChangeEvent, useState, useEffect, FormEvent } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import MapComponent from "./map"
 import { Address } from "@/types/address"
+import { useSearchParams } from "next/navigation";
 
 class NotANumberError extends Error {
     constructor(message: string) {
@@ -15,15 +16,18 @@ export default function CreateLotPage() {
     const [name, setName] = useState<string>("");
     const [capacity, setCapacity] = useState<number>(0);
     const [volume, setVolume] = useState<number>(0);
-    const [street, setStreet] = useState<string>("");
-    const [city, setCity] = useState<string>("");
-    const [state, setState] = useState<string>("");
+    const [street, setStreet] = useState<string | null>("");
+    const [city, setCity] = useState<string | null>("");
+    const [state, setState] = useState<string | null>("");
     const [zip, setZip] = useState<string>("");
     const [address, setAddress] = useState<Address | null>(null);
     const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
     const [isValidVolume, setIsValidVolume] = useState<boolean>(true);
     const [isValidCapacity, setIsValidCapacity] = useState<boolean>(true);    
     const isValidForm = !isValidVolume || !isValidCapacity;
+
+    const searchParams = useSearchParams();
+    const groupId = searchParams.get("groupId");
 
     useEffect(() => {
     }, []);
@@ -82,8 +86,13 @@ export default function CreateLotPage() {
         setZip(address.zip);
     }
 
-    const handleCreateLotSubmit = () => {
-        console.log({
+    const handleCreateLotSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        if (groupId === null) {
+            console.error("Group ID not present in url");
+            return
+        }
+        const payload = {
             name,
             capacity,
             volume,
@@ -91,11 +100,34 @@ export default function CreateLotPage() {
             city,
             state,
             zip
-        });
+        };
+
+        try {
+            const response = await fetch(`http://localhost/api/v1/lot?groupId=${groupId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.error("Error creating lot:", error);
+                return;
+            }
+
+            // Optionally clear form or redirect
+            // resetForm();
+            // router.push("/lots");
+
+        } catch (err) {
+            console.error("Network error:", err);
+        }
     };
 
     return (
-        <form className="p-4" onKeyDown={(e) => e.key == "Enter" && e.preventDefault()}>
+        <form className="p-4" onKeyDown={(e) => e.key == "Enter" && e.preventDefault()} onSubmit={handleCreateLotSubmit}>
             <h1 className="text-2xl font-bold mb-4">Define a New Parking Lot</h1>
             <div className="flex flex-col">
                 <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">
@@ -121,28 +153,32 @@ export default function CreateLotPage() {
                 <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">
                     <MapComponent onAddress={handleNewAddress}/>                        
                     <div className="grid grid-cols-2 gap-2">
-                        <Input 
+                        <Input
+                            required
                             placeholder="Street" 
                             type="text"
-                            value={street}
+                            value={street? street : ""}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => setStreet(event.target.value)}
                             readOnly
                         />
-                        <Input 
+                        <Input
+                            required
                             placeholder="City" 
                             type="text" 
-                            value={city}
+                            value={city ? city: ""}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => setCity(event.target.value)}
                             readOnly
                         />
-                        <Input 
+                        <Input
+                            required
                             placeholder="State" 
                             type="text" 
-                            value={state}
+                            value={state ? state : ""}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => setState(event.target.value)}
                             readOnly
                         />
-                        <Input 
+                        <Input
+                            required 
                             placeholder="ZIP" 
                             type="text" 
                             value={zip}
@@ -160,7 +196,7 @@ export default function CreateLotPage() {
                 
             <Button 
                 aria-label="Create Lot"
-                onSubmit={handleCreateLotSubmit}
+                type="submit"
                 className="text-lg bg-blue-900 hover:bg-blue-500 transition-all"
                 disabled={isValidForm}
             >

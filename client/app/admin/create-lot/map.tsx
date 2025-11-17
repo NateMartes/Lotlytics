@@ -26,7 +26,13 @@ export default function MapComponent({ onAddress }: MapProps) {
     if (!onAddress || !addressObject) {
       return;
     }
-    let street = `${addressObject.house_number} ${addressObject.road}`;
+    let street = `${addressObject.house_number != null ? addressObject.house_number : ""}`;
+    if (street === "") {
+      street = `${addressObject.road != null ? addressObject.road : ""}`;
+    } else {
+      street += ` ${addressObject.road != null ? addressObject.road : ""}`;
+    }
+
     let city = addressObject.city;
     let state = addressObject.state;
     let zip = addressObject.postcode;
@@ -128,6 +134,7 @@ export default function MapComponent({ onAddress }: MapProps) {
 
   return (
     <div className="w-full flex flex-col">
+      <p className="sm:text-md md:text-sm"><span className="font-bold">Note: </span>Parking Lots can only operate within the United States.</p>
       <Card className="mt-4 mb-4 p-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -154,14 +161,14 @@ export default function MapComponent({ onAddress }: MapProps) {
               </div>
             )}
           </div>
-          <Button className="bg-blue-900 hover:bg-blue-400" onClick={handleSearch} disabled={isLoading}>
+          <Button type="button" className="bg-blue-900 hover:bg-blue-400" onClick={handleSearch} disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Search'}
           </Button>
         </div>
       </Card>
       
 
-      <div className="flex-1 mb-4">
+      <div className="flex-1 mb-4 ml-5 mr-5 lg:ml-0 lg:mr-0">
         <div ref={mapRef} className="w-full h-96 rounded-lg shadow-lg">
           {isLoading && (
             <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
