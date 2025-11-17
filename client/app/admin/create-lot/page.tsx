@@ -1,4 +1,6 @@
-"use client"
+'use client';
+
+import { Suspense } from "react";
 import { ChangeEvent, useState, useEffect, FormEvent } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,7 +14,7 @@ class NotANumberError extends Error {
     }
 }
 
-export default function CreateLotPage() {
+export function CreateLotForm() {
     const [name, setName] = useState<string>("");
     const [capacity, setCapacity] = useState<number>(0);
     const [volume, setVolume] = useState<number>(0);
@@ -204,4 +206,12 @@ export default function CreateLotPage() {
             </Button>
         </form>
     );
+}
+
+export default function CreateLotPage() {
+    return (
+        <Suspense>
+            <CreateLotForm/>
+        </Suspense>
+    )
 }
