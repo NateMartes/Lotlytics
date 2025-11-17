@@ -30,7 +30,20 @@ public class OpenStreetMapService implements GeocodingService {
         private String country_code;
 
         public String getFullStreet() {
-            return house_number + " " + road;
+
+            if (house_number == null) {
+                if (road == null) {
+                    return "";
+                } else {
+                    return road;
+                }
+            } else {
+                if (road == null) {
+                    return house_number;
+                } else {
+                    return house_number + " " + road;
+                }
+            }
         }
     }
 
