@@ -1,5 +1,9 @@
+#####################################################
+# AGENT CONFIGURATION
+#####################################################
+
 # production or testing
-mode = "testing"
+mode = "production"
 
 # Objects to be recongized. Objects can added from the COCO dataset https://docs.ultralytics.com/datasets/detect/coco/
 valid_objects = ["person", "car", "motorbike","bus","truck", "cell phone"]
@@ -41,3 +45,13 @@ group = "wilkes-1a2b3c4d"
 
 # The lot this agent is apart of
 lot = "1"
+
+#####################################################
+# SERVER CONFIGURATION
+#####################################################
+
+broker_address = "null"
+
+broker_port = "null"
+
+topic = "null"
