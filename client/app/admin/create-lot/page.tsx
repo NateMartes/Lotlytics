@@ -156,36 +156,44 @@ export function CreateLotForm() {
                     <MapComponent onAddress={handleNewAddress}/>                        
                     <div className="grid grid-cols-2 gap-2">
                         <Input
+                            className="disabled:opacity-100"
                             required
                             placeholder="Street" 
                             type="text"
                             value={street? street : ""}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => setStreet(event.target.value)}
                             readOnly
+                            disabled
                         />
                         <Input
+                            className="disabled:opacity-100"
                             required
                             placeholder="City" 
                             type="text" 
                             value={city ? city: ""}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => setCity(event.target.value)}
                             readOnly
+                            disabled
                         />
                         <Input
+                            className="disabled:opacity-100"
                             required
                             placeholder="State" 
                             type="text" 
                             value={state ? state : ""}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => setState(event.target.value)}
                             readOnly
+                            disabled
                         />
                         <Input
+                            className="disabled:opacity-100"
                             required 
                             placeholder="ZIP" 
                             type="text" 
                             value={zip}
                             onChange={(event: ChangeEvent<HTMLInputElement>) => setZip(event.target.value)}
                             readOnly
+                            disabled
                         />
                     </div>
                 </div>
