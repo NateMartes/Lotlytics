@@ -1,8 +1,12 @@
 package com.lotlytics.api.entites.user;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,7 +28,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "users")
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,5 +54,11 @@ public class User {
         this.username = username;
         this.password = password;
         this.email = email;
+    }
+
+    @Override
+    // Roles will be managed by the database
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.emptyList();
     }
 }

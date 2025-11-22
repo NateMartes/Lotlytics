@@ -1,14 +1,16 @@
 package com.lotlytics.api.services;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.lotlytics.api.config.PasswordConfig;
 import com.lotlytics.api.config.SecurityConfig;
 /*
  * The PasswordService class provides service methods for hashing/checking passwords
  */
 @Service
-public class PasswordService {
+public class PasswordService implements PasswordEncoder {
 
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
@@ -18,8 +20,8 @@ public class PasswordService {
      * @see SecurityConfig
      * @param securityConfig The security configuration for that app.
      */
-    public PasswordService(SecurityConfig securityConfig) {
-        this.bCryptPasswordEncoder = securityConfig.BCryptPasswordEncoderConfig();
+    public PasswordService(PasswordConfig passwordConfig) {
+        this.bCryptPasswordEncoder = passwordConfig.BCryptPasswordEncoderConfig();
     }
 
     /**
@@ -42,5 +44,27 @@ public class PasswordService {
      */
     public boolean compare(String passwordHash, String unHashedPassword) {
         return bCryptPasswordEncoder.matches(unHashedPassword, passwordHash);
+    }
+
+    @Override
+    /**
+     * The encode method is required by PasswordEncoder
+     * 
+     * @param rawPassword A unhashed CharSequence.
+     * @return The hashed string.
+     */
+    public String encode(CharSequence rawPassword) {
+        return hashPassword((String) rawPassword);
+    }
+
+    @Override
+    /**
+     * The matches method is required by PasswordEncoder
+     * 
+     * @param rawPassword A unhashed CharSequence.
+     * @param encodedPassword some password.
+     */
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        return compare((String) rawPassword, encodedPassword);
     }
 }

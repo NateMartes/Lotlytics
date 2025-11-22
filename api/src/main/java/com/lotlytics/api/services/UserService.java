@@ -4,23 +4,32 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Example;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import com.lotlytics.api.entites.exceptions.ConflictException;
 import com.lotlytics.api.entites.exceptions.NotFoundException;
+import com.lotlytics.api.entites.exceptions.UnauthorizedException;
 import com.lotlytics.api.entites.user.CreateUserPayload;
+import com.lotlytics.api.entites.user.LoginUserPayload;
 import com.lotlytics.api.entites.user.User;
 import com.lotlytics.api.repositories.UserRepository;
+import com.lotlytics.api.repositories.UserTokensRepository;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-public class UserService {
+public class UserService implements UserDetailsService {
     
     private UserRepository userRepository;
+    private UserTokensRepository userTokensRepository;
     private PasswordService passwordService;
 
-    public UserService(UserRepository userRepository, PasswordService passwordService) {
+    public UserService(UserRepository userRepository, UserTokensRepository userTokensRepository, PasswordService passwordService) {
         this.userRepository = userRepository;
+        this.userTokensRepository = userTokensRepository;
         this.passwordService = passwordService;
     }
 
@@ -102,4 +111,34 @@ public class UserService {
         }
         return out.get();
     }
+
+     /**
+     * The loginUser method checks if a user is logged in, and if so, create a JWT token for the user.
+     * @return A JWT Token
+     * @throws NotFoundException
+     */
+    public User loginUser(LoginUserPayload payload) throws NotFoundException, UnauthorizedException {
+        String username = payload.getUsername();
+        String password = payload.getPassword();
+        if (!isAUserByUsername(username)) {
+            throw new NotFoundException("User does not exist");
+        }
+
+        User u = getUserByUsername(username);
+        if (!passwordService.matches(password, u.getPassword())) {
+            throw new UnauthorizedException("");
+        }
+
+        return u;
+    }
+
+    /**
+     * The loadUserByUsername method is needed for the UserDetailsService
+     * @param username
+     * @return 
+     * @throws UsernameNotFoundException
+    */
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return getUserByUsername(username);
+    }   
 }

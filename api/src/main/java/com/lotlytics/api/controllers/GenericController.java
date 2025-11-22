@@ -56,6 +56,11 @@ public abstract class GenericController {
                 new ErrorMessage(e.getMessage()),
                 HttpStatus.CONFLICT
             );
+        } catch (UnauthorizedException e) {
+            return new ResponseEntity<ErrorMessage>(
+                new ErrorMessage(e.getMessage()),
+                HttpStatus.UNAUTHORIZED
+            );
         } catch (Exception e) {
             log.error("Unhandled Exception::" + e.getClass().getSimpleName() + " : " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

@@ -42,6 +42,14 @@ CREATE TABLE group_members (
     UNIQUE (group_id, user_id)
 );
 
+CREATE TABLE user_tokens (
+    token_id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token STRING NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    expires_at TIMESTAMP
+);
+
 -- Trigger for auto-updating 'updated_at'
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

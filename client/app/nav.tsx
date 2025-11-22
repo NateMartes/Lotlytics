@@ -9,7 +9,7 @@ export function Navigation() {
   return (
     <nav className="flex sticky top-0 text-md md:text-2xl text-white p-5 justify-between w-screen bg-blue-900 shadow-md z-1002">
       <div>
-        <a href="#">
+        <a href="/">
           <Image src="/Lotlytics.avif" alt="Lotlytics" width="60" height="60"/>
         </a>
       </div>

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lotlytics.api.entites.user.CreateUserPayload;
+import com.lotlytics.api.entites.user.LoginUserPayload;
 import com.lotlytics.api.services.UserService;
 
 import jakarta.validation.Valid;
@@ -71,5 +72,18 @@ public class UserController extends GenericController {
     public ResponseEntity<?> getUser(@Valid @RequestParam String username) {
         log.info(String.format(endpointMsg, "GET", "?username=" + username));
         return callServiceMethod(() -> userService.getUserByUsername(username), HttpStatus.OK);
+    }
+
+    /**
+     * The loginUser method handles the /api/v1/user/login endpoint.
+     * The method throws a 404 if the user does not exist.
+     * 
+     * @param username the username of a user.
+     * @return A User.
+     */
+    @PostMapping(path = "/login")
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginUserPayload payload) {
+        log.info(String.format(endpointMsg, "POST", ""));
+        return callServiceMethod(() -> userService.loginUser(payload), HttpStatus.OK);
     }
 }
