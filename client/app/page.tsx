@@ -6,6 +6,7 @@ import { FormEvent, useRef, useState } from "react"
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Navigation } from "@/components/nav";
 
 export default function Home() {
 
@@ -59,6 +60,7 @@ export default function Home() {
 
   return (
     <>
+      <Navigation/>
       <div className="flex flex-col place-items-center mt-5 text-2xl lg:text-3xl gap-4">
           <p className="text-center">Make Your Traveling Less Stressful</p>
           <Card className="md:min-w-2xl">

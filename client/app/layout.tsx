@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Navigation } from "./nav";
 import { Footer } from "./footer";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
@@ -19,7 +18,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navigation/>
         {children}
         <Footer />
       </body>

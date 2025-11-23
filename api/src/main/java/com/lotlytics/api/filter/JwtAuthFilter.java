@@ -18,6 +18,7 @@ import org.springframework.web.util.WebUtils;
 import com.lotlytics.api.services.JwtService;
 import com.lotlytics.api.services.UserService;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 
 import java.io.IOException;
@@ -69,6 +70,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (MalformedJwtException e) {
+                token = null;
+            } catch (ExpiredJwtException e) {
                 token = null;
             }
         }    

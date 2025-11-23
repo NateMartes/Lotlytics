@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button"
 import MapComponent from "./map"
 import { Address } from "@/types/address"
 import { useSearchParams } from "next/navigation";
-import { NotLoggedInError } from "@/types/login";
-import { useRouter } from 'next/navigation';
-
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { Navigation } from "@/components/nav";
 
 class NotANumberError extends Error {
     constructor(message: string) {
@@ -33,25 +33,18 @@ export function CreateLotForm() {
 
     const searchParams = useSearchParams();
     const router = useRouter();
-    const groupId = searchParams.get("groupId");
+    const { isLoading, isAuthenticated } = useAuth();
 
     useEffect(() => {
-        const url = "http://localhost:6600/api/v1/user/me";
-        fetch(url, {credentials: 'include'}).then((res) => {
-            if (!res.ok) {
-                throw new NotLoggedInError(`Not Logged in`);
-            }
-            return res.json()
-        }).then((data) => {
-            console.log(data.username);
-        }).catch((err) => {
-            if (err instanceof NotLoggedInError) {
-                router.push("/admin")
-            } else {
+        console.log(isLoading)
+        console.log(isAuthenticated)
+        if (!isLoading && !isAuthenticated) {
+            router.push("/admin");
+        }
+    }, [isLoading, isAuthenticated, router]);
 
-            }
-        })
-    }, []);
+    const groupId = searchParams.get("groupId");
+
 
     const validateVolumeInput = (value: string) => {
         try {
@@ -138,100 +131,99 @@ export function CreateLotForm() {
                 return;
             }
 
-            // Optionally clear form or redirect
-            // resetForm();
-            // router.push("/lots");
-
         } catch (err) {
             console.error("Network error:", err);
         }
     };
 
     return (
-        <form className="p-4" onKeyDown={(e) => e.key == "Enter" && e.preventDefault()} onSubmit={handleCreateLotSubmit}>
-            <h1 className="text-2xl font-bold mb-4">Define a New Parking Lot</h1>
-            <div className="flex flex-col">
-                <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">
-                    <Input 
-                        required 
-                        placeholder="Name" 
-                        type="text" 
-                        onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
-                    />
-                    <Input 
-                        required 
-                        placeholder="Current Volume" 
-                        type="text" 
-                        onChange={(event: ChangeEvent<HTMLInputElement>) => validateVolumeInput(event.target.value)}
-                    />
-                    <Input 
-                        required 
-                        placeholder="Max Capacity" 
-                        type="text" 
-                        onChange={(event: ChangeEvent<HTMLInputElement>) => validateCapacityInput(event.target.value)}
-                    />
-                </div>
-                <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">
-                    <MapComponent onAddress={handleNewAddress}/>                        
-                    <div className="grid grid-cols-2 gap-2">
-                        <Input
-                            className="disabled:opacity-100"
-                            required
-                            placeholder="Street" 
-                            type="text"
-                            value={street? street : ""}
-                            onChange={(event: ChangeEvent<HTMLInputElement>) => setStreet(event.target.value)}
-                            readOnly
-                            disabled
-                        />
-                        <Input
-                            className="disabled:opacity-100"
-                            required
-                            placeholder="City" 
-                            type="text" 
-                            value={city ? city: ""}
-                            onChange={(event: ChangeEvent<HTMLInputElement>) => setCity(event.target.value)}
-                            readOnly
-                            disabled
-                        />
-                        <Input
-                            className="disabled:opacity-100"
-                            required
-                            placeholder="State" 
-                            type="text" 
-                            value={state ? state : ""}
-                            onChange={(event: ChangeEvent<HTMLInputElement>) => setState(event.target.value)}
-                            readOnly
-                            disabled
-                        />
-                        <Input
-                            className="disabled:opacity-100"
+        <>
+            <Navigation/>
+            <form className="p-4" onKeyDown={(e) => e.key == "Enter" && e.preventDefault()} onSubmit={handleCreateLotSubmit}>
+                <h1 className="text-2xl font-bold mb-4">Define a New Parking Lot</h1>
+                <div className="flex flex-col">
+                    <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">
+                        <Input 
                             required 
-                            placeholder="ZIP" 
+                            placeholder="Name" 
                             type="text" 
-                            value={zip}
-                            onChange={(event: ChangeEvent<HTMLInputElement>) => setZip(event.target.value)}
-                            readOnly
-                            disabled
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
+                        />
+                        <Input 
+                            required 
+                            placeholder="Current Volume" 
+                            type="text" 
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => validateVolumeInput(event.target.value)}
+                        />
+                        <Input 
+                            required 
+                            placeholder="Max Capacity" 
+                            type="text" 
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => validateCapacityInput(event.target.value)}
                         />
                     </div>
-                </div>
-            </div>                
-            {isValidForm && formErrorMessage ? 
-                <div className="mt-2 mb-2">
-                    <span className="text-red-600">{formErrorMessage}</span> 
-                </div>
-                : null}
-                
-            <Button 
-                aria-label="Create Lot"
-                type="submit"
-                className="text-lg bg-blue-900 hover:bg-blue-500 transition-all"
-                disabled={isValidForm}
-            >
-                Create Lot
-            </Button>
-        </form>
+                    <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">
+                        <MapComponent onAddress={handleNewAddress}/>                        
+                        <div className="grid grid-cols-2 gap-2">
+                            <Input
+                                className="disabled:opacity-100"
+                                required
+                                placeholder="Street" 
+                                type="text"
+                                value={street? street : ""}
+                                onChange={(event: ChangeEvent<HTMLInputElement>) => setStreet(event.target.value)}
+                                readOnly
+                                disabled
+                            />
+                            <Input
+                                className="disabled:opacity-100"
+                                required
+                                placeholder="City" 
+                                type="text" 
+                                value={city ? city: ""}
+                                onChange={(event: ChangeEvent<HTMLInputElement>) => setCity(event.target.value)}
+                                readOnly
+                                disabled
+                            />
+                            <Input
+                                className="disabled:opacity-100"
+                                required
+                                placeholder="State" 
+                                type="text" 
+                                value={state ? state : ""}
+                                onChange={(event: ChangeEvent<HTMLInputElement>) => setState(event.target.value)}
+                                readOnly
+                                disabled
+                            />
+                            <Input
+                                className="disabled:opacity-100"
+                                required 
+                                placeholder="ZIP" 
+                                type="text" 
+                                value={zip}
+                                onChange={(event: ChangeEvent<HTMLInputElement>) => setZip(event.target.value)}
+                                readOnly
+                                disabled
+                            />
+                        </div>
+                    </div>
+                </div>                
+                {isValidForm && formErrorMessage ? 
+                    <div className="mt-2 mb-2">
+                        <span className="text-red-600">{formErrorMessage}</span> 
+                    </div>
+                    : null}
+                    
+                <Button 
+                    aria-label="Create Lot"
+                    type="submit"
+                    className="text-lg bg-blue-900 hover:bg-blue-500 transition-all"
+                    disabled={isValidForm}
+                >
+                    Create Lot
+                </Button>
+            </form>
+        </>
     );
 }
 

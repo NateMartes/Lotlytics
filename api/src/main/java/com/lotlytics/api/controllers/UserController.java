@@ -107,7 +107,7 @@ public class UserController extends GenericController {
 
     /**
      * The getCurrentUser method handles the /api/v1/user/me endpoint.
-     * The method throws a 401 or 403 if the user is not logged in.
+     * The method throws a 401 if the user is not logged in.
      * 
      * @param username the username of a user.
      * @return A User.
@@ -118,7 +118,7 @@ public class UserController extends GenericController {
 
         // If the token is valid, then userDetails will not be null and we can sign the user in
         if (userDetails == null) {
-            return new ResponseEntity<ErrorMessage>(HttpStatus.FORBIDDEN);
+            return new ResponseEntity<ErrorMessage>(HttpStatus.UNAUTHORIZED);
         }
 
         Map<String, String> payload = new HashMap<String, String>();
