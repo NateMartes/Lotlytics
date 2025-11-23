@@ -22,7 +22,7 @@ export default function AdminPage() {
     if (!isLoading && isAuthenticated) {
       router.push("/admin/create-lot");
     }
-  }, [isLoading, isAuthenticated]);
+  }, [isLoading, isAuthenticated, router]);
 
   const handleLoginSubmit = async (event: FormEvent) => {
     event.preventDefault();
