@@ -16,7 +16,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.lotlytics.api.services.JwtService;
 import com.lotlytics.api.services.PasswordService;
 import com.lotlytics.api.services.UserService;
 

@@ -5,14 +5,20 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.data.domain.Example;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import com.lotlytics.api.entites.token.UserToken;
+import com.lotlytics.api.repositories.UserTokensRepository;
 
 import java.security.Key;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -21,6 +27,11 @@ public class JwtService {
 
     public static final String SECRET = "5367566859703373367639792F423F452848284D6251655468576D5A71347437";
     private static final long EXPIRATION = 30;
+    private UserTokensRepository userTokensRepository;
+
+    public JwtService(UserTokensRepository userTokensRepository) {
+        this.userTokensRepository = userTokensRepository;
+    }
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
@@ -66,12 +77,41 @@ public class JwtService {
                 .getBody();
     }
 
-    private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).isBefore(ZonedDateTime.now(ZoneOffset.UTC));
+    /**
+     * The isValidToken method checks the database if this token exists for this specifc user and is it
+     * not expired.
+     * 
+     * @param token The token for the user.
+     * @param username a user's username.
+     * @return true if the token is valid.
+     */
+    private boolean isValidTokenInDatabase(String token, String username) {
+        UserToken u = new UserToken();
+        u.setToken(token);
+        List<UserToken> matches = userTokensRepository.findAll(Example.of(u));
+
+        if (matches.isEmpty()) {
+            return false;
+        }
+
+        UserToken actualToken = matches.get(0);
+        if (!extractUsername(actualToken.getToken()).equals(username)) {
+            return false;
+        }
+        
+        // Assume there will only be one match
+        ZonedDateTime expireTime = actualToken.getExpiresAt();
+        return expireTime.isAfter(ZonedDateTime.now(ZoneOffset.UTC));
+    }
+
+    private Boolean isTokenExpired(String token, String username) {
+        return
+        extractExpiration(token).isBefore(ZonedDateTime.now(ZoneOffset.UTC)) &&
+        isValidTokenInDatabase(token, username);
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token, username));
     }
 }

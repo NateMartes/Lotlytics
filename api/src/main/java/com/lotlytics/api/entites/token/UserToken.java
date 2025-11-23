@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /*
- * The User class represent a Lotlytics user
+ * The User token class represent a Lotlytics user's token in the database
  */
 @AllArgsConstructor
 @NoArgsConstructor

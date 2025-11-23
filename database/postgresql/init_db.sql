@@ -47,7 +47,8 @@ CREATE TABLE user_tokens (
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    expires_at TIMESTAMP
+    expires_at TIMESTAMP,
+    UNIQUE (user_id, token)
 );
 
 -- Trigger for auto-updating 'updated_at'

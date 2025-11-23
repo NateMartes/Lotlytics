@@ -18,6 +18,8 @@ import org.springframework.web.util.WebUtils;
 import com.lotlytics.api.services.JwtService;
 import com.lotlytics.api.services.UserService;
 
+import io.jsonwebtoken.MalformedJwtException;
+
 import java.io.IOException;
 
 @Component
@@ -40,6 +42,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         Cookie jwtCookie = WebUtils.getCookie(request, "jwt");
         if (jwtCookie != null) {
             token = jwtCookie.getValue();
+            
         } 
         
         if (token == null) {
@@ -50,21 +53,26 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         if (token != null) {
-            username = jwtService.extractUsername(token);
+            try {
+                username = jwtService.extractUsername(token);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userService.loadUserByUsername(username);
-                
-                if (jwtService.validateToken(token, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userService.loadUserByUsername(username);
+                    
+                    if (jwtService.validateToken(token, userDetails)) {
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities());
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
+            } catch (MalformedJwtException e) {
+                token = null;
             }
-        }        
+        }    
+
         filterChain.doFilter(request, response);
     }
 }
