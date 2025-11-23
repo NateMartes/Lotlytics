@@ -20,7 +20,7 @@ export default function Home() {
     event.preventDefault();
 
     setSearching(true);
-    const url = "http://localhost/api/v1/lot"
+    const url = "http://localhost:6600/api/v1/lot"
 
     fetch(url)
       .then((res: Response) => {

@@ -26,6 +26,11 @@ export default function AdminPage() {
 
   const handleLoginSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (username == "" || password == "") {
+        setErrorMessage("Please fill in the form.");
+        return;
+    }
+
     setLoading(true);
     setErrorMessage(null);
 

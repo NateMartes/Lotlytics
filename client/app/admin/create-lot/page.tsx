@@ -36,8 +36,6 @@ export function CreateLotForm() {
     const { isLoading, isAuthenticated } = useAuth();
 
     useEffect(() => {
-        console.log(isLoading)
-        console.log(isAuthenticated)
         if (!isLoading && !isAuthenticated) {
             router.push("/admin");
         }
