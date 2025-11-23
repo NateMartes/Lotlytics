@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button"
 import MapComponent from "./map"
 import { Address } from "@/types/address"
 import { useSearchParams } from "next/navigation";
+import { NotLoggedInError } from "@/types/login";
+import { useRouter } from 'next/navigation';
+
 
 class NotANumberError extends Error {
     constructor(message: string) {
@@ -29,9 +32,25 @@ export function CreateLotForm() {
     const isValidForm = !isValidVolume || !isValidCapacity;
 
     const searchParams = useSearchParams();
+    const router = useRouter();
     const groupId = searchParams.get("groupId");
 
     useEffect(() => {
+        const url = "http://localhost:6600/api/v1/user/me";
+        fetch(url, {credentials: 'include'}).then((res) => {
+            if (!res.ok) {
+                throw new NotLoggedInError(`Not Logged in`);
+            }
+            return res.json()
+        }).then((data) => {
+            console.log(data.username);
+        }).catch((err) => {
+            if (err instanceof NotLoggedInError) {
+                router.push("/admin")
+            } else {
+
+            }
+        })
     }, []);
 
     const validateVolumeInput = (value: string) => {

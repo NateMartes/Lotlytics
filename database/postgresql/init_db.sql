@@ -43,10 +43,10 @@ CREATE TABLE group_members (
 );
 
 CREATE TABLE user_tokens (
-    token_id SERIAL PRIMARY KEY,
-    user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token STRING NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     expires_at TIMESTAMP
 );
 
@@ -77,3 +77,6 @@ INSERT INTO lots (group_id, capacity, current_volume, name, street, city, state,
 ('wilkes-1a2b3c4d', 100, 75, 'Lot B', '456 Maple Ave', 'Wilkes-Barre', 'PA', '18711'),
 ('google-5e6f7g8h', 30, 5, 'Lot C', '1600 Amphitheatre Pkwy', 'Mountain View', 'CA', '94043'),
 ('datadog-9i0j1k2l', 80, 40, 'Lot D', '500 Tech Dr', 'Boston', 'MA', '02110');
+
+INSERT INTO users (id, username, email, password) VALUES
+(1, 'cosmic', 'myemail@gmail.com', '$2a$15$QhBrq.LVq8tchg5kPajnTejHPxEzUDHWcfSDxULez.Pl0NI8KiKNa');

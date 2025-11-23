@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { FormEvent, useState } from "react"
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleLoginSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -20,6 +22,7 @@ export default function AdminPage() {
     const url = "http://localhost:6600/api/v1/user/login";
     
     fetch(url, {
+      credentials: "include",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -29,11 +32,9 @@ export default function AdminPage() {
       .then((res: Response) => {
         if (!res.ok) {
           throw new Error(`Login failed. Status: ${res.status}`);
+        } else {
+         router.push("/admin/create-lot");
         }
-        return res.json();
-      })
-      .then((data: { token: string }) => {
-        window.location.href = "/admin/dashboard";
       })
       .catch((error: Error) => {
         console.error("Login error:", error);

@@ -4,7 +4,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Getter;
 import lombok.Setter;
-
 /*
  * The SecurityProperties class aggregates the configuration
  * properties defined in the application.properties file for
@@ -29,4 +28,15 @@ public class SecurityProperties {
 
     /** A comma seperated list of headers that are allowed by this API */
     private String corsAllowHeaders = "*";
+
+    /** 'true' if we will allow credentials in our API */
+    private String corsAllowCredential = "false";
+
+    public Boolean getCorsAllowCredentialBoolean() throws IllegalArgumentException {
+        try {
+            return Boolean.parseBoolean(corsAllowCredential);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("corsAllowCredential must be true or false");
+        }
+    }
 }

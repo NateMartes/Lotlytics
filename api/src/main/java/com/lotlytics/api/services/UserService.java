@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.lotlytics.api.entites.exceptions.ConflictException;
 import com.lotlytics.api.entites.exceptions.NotFoundException;
 import com.lotlytics.api.entites.exceptions.UnauthorizedException;
+import com.lotlytics.api.entites.token.UserToken;
 import com.lotlytics.api.entites.user.CreateUserPayload;
 import com.lotlytics.api.entites.user.LoginUserPayload;
 import com.lotlytics.api.entites.user.User;
@@ -26,11 +27,13 @@ public class UserService implements UserDetailsService {
     private UserRepository userRepository;
     private UserTokensRepository userTokensRepository;
     private PasswordService passwordService;
+    private JwtService jwtService;
 
-    public UserService(UserRepository userRepository, UserTokensRepository userTokensRepository, PasswordService passwordService) {
+    public UserService(UserRepository userRepository, UserTokensRepository userTokensRepository, PasswordService passwordService, JwtService jwtService) {
         this.userRepository = userRepository;
         this.userTokensRepository = userTokensRepository;
         this.passwordService = passwordService;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -116,8 +119,9 @@ public class UserService implements UserDetailsService {
      * The loginUser method checks if a user is logged in, and if so, create a JWT token for the user.
      * @return A JWT Token
      * @throws NotFoundException
+     * @throws UnauthorizedException
      */
-    public User loginUser(LoginUserPayload payload) throws NotFoundException, UnauthorizedException {
+    public String loginUser(LoginUserPayload payload) throws NotFoundException, UnauthorizedException {
         String username = payload.getUsername();
         String password = payload.getPassword();
         if (!isAUserByUsername(username)) {
@@ -129,7 +133,15 @@ public class UserService implements UserDetailsService {
             throw new UnauthorizedException("");
         }
 
-        return u;
+        String token = jwtService.generateToken(username);
+
+        UserToken userToken = new UserToken();
+        userToken.setToken(token);
+        userToken.setUserId(u.getId());
+        userToken.setExpiresAt(jwtService.extractExpiration(token));
+        userTokensRepository.save(userToken);
+
+        return token;
     }
 
     /**

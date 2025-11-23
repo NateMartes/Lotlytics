@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +20,7 @@ import java.util.function.Function;
 public class JwtService {
 
     public static final String SECRET = "5367566859703373367639792F423F452848284D6251655468576D5A71347437";
+    private static final long EXPIRATION = 30;
 
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
@@ -25,11 +28,13 @@ public class JwtService {
     }
 
     private String createToken(Map<String, Object> claims, String username) {
+        ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+        ZonedDateTime expiration = now.plusMinutes(EXPIRATION);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
+                .setExpiration(Date.from(expiration.toInstant()))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -43,8 +48,9 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public ZonedDateTime extractExpiration(String token) {
+        Date expiration = extractClaim(token, Claims::getExpiration);
+        return ZonedDateTime.ofInstant(expiration.toInstant(), ZoneOffset.UTC);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -61,7 +67,7 @@ public class JwtService {
     }
 
     private Boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        return extractExpiration(token).isBefore(ZonedDateTime.now(ZoneOffset.UTC));
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {

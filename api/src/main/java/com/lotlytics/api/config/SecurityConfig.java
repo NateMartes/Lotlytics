@@ -11,9 +11,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.lotlytics.api.services.JwtService;
 import com.lotlytics.api.services.PasswordService;
 import com.lotlytics.api.services.UserService;
 
@@ -34,11 +37,13 @@ public class SecurityConfig {
     private static final String LIST_SEPERATOR = ",";
     private UserService userService;
     private PasswordService passwordService;
+    private OncePerRequestFilter filter;
 
-    public SecurityConfig(SecurityProperties properties, UserService userService, PasswordService passwordService) {
+    public SecurityConfig(SecurityProperties properties, UserService userService, PasswordService passwordService, OncePerRequestFilter filter) {
         this.properties = properties;
         this.userService = userService;
         this.passwordService = passwordService;
+        this.filter = filter;
     }
 
     /**
@@ -59,6 +64,7 @@ public class SecurityConfig {
             config.setAllowedHeaders(
                 Arrays.asList(properties.getCorsAllowHeaders().split(LIST_SEPERATOR)
             ));
+            config.setAllowCredentials(properties.getCorsAllowCredentialBoolean());
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid CORS configuration: " + e.getMessage(), e);
         }
@@ -80,13 +86,14 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> 
                     auth
-                    .requestMatchers("/login").authenticated()
+                    .requestMatchers("/login", "/me").authenticated()
                     .anyRequest().permitAll()
                 )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .httpBasic(httpBasic -> httpBasic.disable())
             .authenticationProvider(authenticationProvider())
-            .formLogin(form -> form.disable());
+            .formLogin(form -> form.disable())
+            .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

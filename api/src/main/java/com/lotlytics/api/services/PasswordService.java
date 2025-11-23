@@ -42,7 +42,7 @@ public class PasswordService implements PasswordEncoder {
      * @param unHashedPassword The unhashed password.
      * @return true if and only if the unhased password is the same as the hased one.
      */
-    public boolean compare(String passwordHash, String unHashedPassword) {
+    public boolean compare(String unHashedPassword, String passwordHash) {
         return bCryptPasswordEncoder.matches(unHashedPassword, passwordHash);
     }
 
@@ -65,6 +65,6 @@ public class PasswordService implements PasswordEncoder {
      * @param encodedPassword some password.
      */
     public boolean matches(CharSequence rawPassword, String encodedPassword) {
-        return compare((String) rawPassword, encodedPassword);
+        return compare(rawPassword.toString(), encodedPassword);
     }
 }

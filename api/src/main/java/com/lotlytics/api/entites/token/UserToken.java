@@ -1,5 +1,9 @@
 package com.lotlytics.api.entites.token;
 
+import java.time.ZonedDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,5 +37,13 @@ public class UserToken {
 
     /* The token for the user's session */
     private String token;
+
+    /* The time the token was created at */
+    @CreationTimestamp
+    @Column(updatable = false)
+    private ZonedDateTime createdAt;
+
+    /* The time the token expires at */
+    private ZonedDateTime expiresAt;
 
 }
