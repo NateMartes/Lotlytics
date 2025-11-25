@@ -3,7 +3,7 @@
 #####################################################
 
 # production or testing
-mode = "production"
+mode = "testing"
 
 # Objects to be recongized. Objects can added from the COCO dataset https://docs.ultralytics.com/datasets/detect/coco/
 valid_objects = ["person", "car", "motorbike","bus","truck", "cell phone"]
