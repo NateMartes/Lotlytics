@@ -4,6 +4,8 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarHeader,
+  SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar"
 import Image from 'next/image';
 
@@ -18,6 +20,17 @@ export function DashboardMenu() {
                     </a>
                 </div>
             </SidebarHeader>
+            <SidebarContent className="text-white">
+                <SidebarMenuItem>
+                    <a href="/admin/dashboard/create-lot">Create Lot</a>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <a href="/admin/dashboard/create-lot">Add A User to my Group</a>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <a href="/admin/dashboard/create-lot">Log Out</a>
+                </SidebarMenuItem>
+            </SidebarContent>
         </Sidebar>
     )
 }

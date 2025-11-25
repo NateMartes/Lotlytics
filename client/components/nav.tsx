@@ -21,7 +21,7 @@ export function Navigation({ isMain = true, hasIcon = true }: NavProps) {
   )
 
   const userDisplay = isAuthenticated && user ? (
-      <a href="/admin/create-lot">
+      <a href="/admin/dashboard">
         <p>{user.username}'s Dashboard</p>
       </a>
     ) : (

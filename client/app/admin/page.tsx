@@ -21,7 +21,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/admin/create-lot");
+      router.push("/admin/dashboard");
     }
   }, [isLoading, isAuthenticated, router]);
 
@@ -50,7 +50,7 @@ export default function AdminPage() {
           throw new Error(`Login failed. Status: ${res.status}`);
         } else {
           await refreshUser();
-          router.push("/admin/create-lot");
+          router.push("/admin/dashboard");
         }
       })
       .catch((error: Error) => {
