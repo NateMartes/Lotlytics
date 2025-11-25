@@ -23,6 +23,10 @@ import io.jsonwebtoken.MalformedJwtException;
 
 import java.io.IOException;
 
+/**
+ * The JwtAuthFilter runs for request that require authorization. It validates tokens and
+ * updates the UsernamePasswordAuthenticationToken when tokens are still valid
+ */
 @Component
 @Primary
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -35,6 +39,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
+    /**
+     * The doFilterInternal method takens an HTTP request and checks for tokens and updates the
+     * UsernamePasswordAuthenticationToken.
+     */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         String token = null;

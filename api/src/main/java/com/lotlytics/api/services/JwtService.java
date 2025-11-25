@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * The JwtService class defines service methods that are used
+ * to create and decode JWT tokens.
+ */
 @Service
 public class JwtService {
 
@@ -33,11 +37,22 @@ public class JwtService {
         this.userTokensRepository = userTokensRepository;
     }
 
+    /**
+     * The generateToken method generates a JWT token from a username.
+     * @param username
+     * @return A String of a JWT token.
+     */
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, username);
     }
 
+    /**
+     * The createToken method creates a JWT token using a username.
+     * @param claims empty
+     * @param username
+     * @return A String of a JWT token.
+     */
     private String createToken(Map<String, Object> claims, String username) {
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
         ZonedDateTime expiration = now.plusMinutes(EXPIRATION);
@@ -50,15 +65,29 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+     * The getSignKey get a key that can be used to decode the JWT token.
+     * @return a new signing key.
+     */
     private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * The extractUsername method takes a JWT tokens and returns the username the token was made with.
+     * @param token some JWT token.
+     * @return a username.
+     */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
+    /**
+     * The extractExpiration method takes a JWT tokens and returns the expire time the token was given.
+     * @param token some JWT token.
+     * @return A timestamp of the JWT token.
+     */
     public ZonedDateTime extractExpiration(String token) {
         Date expiration = extractClaim(token, Claims::getExpiration);
         return ZonedDateTime.ofInstant(expiration.toInstant(), ZoneOffset.UTC);
@@ -104,12 +133,25 @@ public class JwtService {
         return expireTime.isAfter(ZonedDateTime.now(ZoneOffset.UTC));
     }
 
+    /**
+     * The isTokenExpired method determines if a token is expired.
+     * This method calls to the database storing the tokens as a user could update the time in the token.
+     * @param token a JWT token.
+     * @param username a username.
+     * @return true if the token is not expired.
+     */
     private Boolean isTokenExpired(String token, String username) {
         return
         extractExpiration(token).isBefore(ZonedDateTime.now(ZoneOffset.UTC)) &&
         isValidTokenInDatabase(token, username);
     }
 
+    /**
+     * The validateToken method determines if a token is a valid JWT token.
+     * @param token a JWT token.
+     * @param userDetails The details of the user this token pertains to.
+     * @return true if the token is valid.
+     */
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token, username));
