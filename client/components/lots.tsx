@@ -7,7 +7,7 @@ import {
   CardHeader,
 } from "@/components/ui/card"
 import Image from 'next/image';
-import Map from "./map";
+import { Map } from "@/components/google-map";
 
 type LotOccupancyLevel = "low" | "medium" | "high";
 

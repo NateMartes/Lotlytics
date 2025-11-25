@@ -8,6 +8,7 @@ import { FormEvent, useEffect, useState } from "react"
 import { useRouter } from 'next/navigation';
 import { useAuth } from "@/context/AuthContext"
 import { Navigation } from "@/components/nav"
+import { Footer } from "@/components/footer"
 
 export default function AdminPage() {
   const [username, setUsername] = useState("");
@@ -100,7 +101,7 @@ export default function AdminPage() {
             </div>
 
             <Button 
-              className="bg-blue-900 hover:bg-blue-400 mt-2" 
+              className="bg-blue-950 hover:bg-blue-500 mt-2" 
               disabled={loading}
               type="submit"
             >
@@ -122,6 +123,7 @@ export default function AdminPage() {
           </div>
         ) : null}
       </div>
+      <Footer/>
     </>
   );
 }

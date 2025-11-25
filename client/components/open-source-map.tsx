@@ -12,7 +12,7 @@ interface MapProps {
   onAddress?: (address: Address) => void
 }
 
-export default function MapComponent({ onAddress }: MapProps) {
+export function MapComponent({ onAddress }: MapProps) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);

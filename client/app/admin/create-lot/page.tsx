@@ -4,12 +4,13 @@ import { Suspense } from "react";
 import { ChangeEvent, useState, useEffect, FormEvent } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import MapComponent from "./map"
+import { MapComponent } from "@/components/open-source-map"
 import { Address } from "@/types/address"
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Navigation } from "@/components/nav";
+import { Footer } from "@/components/footer";
 
 class NotANumberError extends Error {
     constructor(message: string) {
@@ -215,12 +216,13 @@ export function CreateLotForm() {
                 <Button 
                     aria-label="Create Lot"
                     type="submit"
-                    className="text-lg bg-blue-900 hover:bg-blue-500 transition-all"
+                    className="text-lg bg-blue-950 hover:bg-blue-500 transition-all"
                     disabled={isValidForm}
                 >
                     Create Lot
                 </Button>
             </form>
+            <Footer/>
         </>
     );
 }

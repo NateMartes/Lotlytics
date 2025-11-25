@@ -36,4 +36,4 @@ const Map: React.FC<MapProps> = ({
   );
 };
 
-export default Map;
+export { Map };

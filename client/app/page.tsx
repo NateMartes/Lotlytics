@@ -1,12 +1,13 @@
 "use client"
 import { Input } from "@/components/ui/input"
 import { Lot, createLot } from "@/types/lot";
-import { LotList, LotListHandle } from "./lots";
+import { LotList, LotListHandle } from "@/components/lots";
 import { FormEvent, useRef, useState } from "react"
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Navigation } from "@/components/nav";
+import { Footer } from "@/components/footer";
 
 export default function Home() {
 
@@ -71,7 +72,7 @@ export default function Home() {
                   placeholder="Search for a Parking Lot..."
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
-                <Button className="bg-blue-900 hover:bg-blue-400" disabled={searching}>
+                <Button className="bg-blue-950 hover:bg-blue-500" disabled={searching}>
                   {searching ? 'Loading...' : 'Search'}
                 </Button>
             </form>
@@ -91,6 +92,7 @@ export default function Home() {
             <LotList ref={lotListRef} hasSearched={hasSearched} />
           </div>
       </div>
+      <Footer/>
     </>
   );
 }
