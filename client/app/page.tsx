@@ -20,7 +20,7 @@ export default function Home() {
     event.preventDefault();
 
     setSearching(true);
-    const url = "http://localhost:6600/api/v1/lot"
+    const url = "http://localhost/api/v1/lot"
 
     fetch(url)
       .then((res: Response) => {
@@ -62,7 +62,7 @@ export default function Home() {
     <>
       <Navigation/>
       <div className="flex flex-col place-items-center mt-5 text-2xl lg:text-3xl gap-4">
-          <p className="text-center">Make Your Traveling Less Stressful</p>
+          <p className="text-center">Travel Better, Park Smarter.</p>
           <Card className="md:min-w-2xl">
             <form className="flex p-4 justify-center gap-4" onSubmit={(event: FormEvent) => handleSearchSubmit(event)}>
                 <Input

@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUser = useCallback(async () => {
       setAuthState(prev => ({ ...prev, isLoading: true }));
       try {
-        const response = await fetch("http://localhost:6600/api/v1/user/me", {credentials: "include"});
+        const response = await fetch("http://localhost/api/v1/user/me", {credentials: "include"});
 
         if (response.ok) {
           const userData: User = await response.json();

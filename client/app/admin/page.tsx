@@ -34,7 +34,7 @@ export default function AdminPage() {
     setLoading(true);
     setErrorMessage(null);
 
-    const url = "http://localhost:6600/api/v1/user/login";
+    const url = "http://localhost/api/v1/user/login";
     
     fetch(url, {
       credentials: "include",
