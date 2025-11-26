@@ -62,7 +62,7 @@ export default function Home() {
   return (
     <>
       <Navigation/>
-      <div className="flex flex-col place-items-center mt-5 text-2xl lg:text-3xl gap-4">
+      <div className="flex flex-col place-items-center mt-20 text-2xl lg:text-3xl gap-4">
           <p className="text-center">Travel Better, Park Smarter.</p>
           <Card className="md:min-w-2xl">
             <form className="flex p-4 justify-center gap-4" onSubmit={(event: FormEvent) => handleSearchSubmit(event)}>

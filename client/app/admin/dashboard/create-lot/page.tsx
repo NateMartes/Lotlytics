@@ -158,28 +158,47 @@ export function CreateLotForm() {
                 <form className="p-4" onKeyDown={(e) => e.key == "Enter" && e.preventDefault()} onSubmit={handleCreateLotSubmit}>
                     <h1 className="text-2xl mb-4">Define a New Parking Lot</h1>
                     <div className="flex flex-col">
-                        <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">
-                            <Input 
-                                required 
-                                placeholder="Name" 
-                                type="text" 
-                                onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
-                            />
-                            <Input 
-                                required 
-                                placeholder="Current Volume" 
-                                type="text" 
-                                onChange={(event: ChangeEvent<HTMLInputElement>) => validateVolumeInput(event.target.value)}
-                            />
-                            <Input 
-                                required 
-                                placeholder="Max Capacity" 
-                                type="text" 
-                                onChange={(event: ChangeEvent<HTMLInputElement>) => validateCapacityInput(event.target.value)}
-                            />
+                        <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">               
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="lotName" className="text-sm font-medium">
+                                    Lot Name
+                                </label>
+                                <Input
+                                    id="lotName" 
+                                    required 
+                                    placeholder="Enter your lot's name" 
+                                    type="text" 
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => setName(event.target.value)}
+                                />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="lotVolume" className="text-sm font-medium">
+                                    Current Volume
+                                </label>
+                                <Input
+                                    id="lotVolume"
+                                    required 
+                                    placeholder="Enter your lot's current volume" 
+                                    type="text" 
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => validateVolumeInput(event.target.value)}
+                                />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="lotCap" className="text-sm font-medium">
+                                    Max Capacity
+                                </label>
+                                <Input
+                                    id="lotCap"
+                                    required 
+                                    placeholder="Enter the max capacity for your lot" 
+                                    type="text" 
+                                    onChange={(event: ChangeEvent<HTMLInputElement>) => validateCapacityInput(event.target.value)}
+                                />
+                            </div>
                         </div>
                         <div className="flex flex-col max-w-lg gap-4 mt-5 mb-5">
-                            <MapComponent onAddress={handleNewAddress}/>                        
+                            <MapComponent onAddress={handleNewAddress}/>     
+                            <p>Values can only be autofilled by searching for a lot.</p>                   
                             <div className="grid grid-cols-2 gap-2">
                                 <Input
                                     className="disabled:opacity-100"

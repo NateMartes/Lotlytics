@@ -3,10 +3,14 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
+  SidebarMenu,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { LogOut, MapPlus, UserPlus } from "lucide-react";
 import Image from 'next/image';
 
 
@@ -20,16 +24,23 @@ export function DashboardMenu() {
                     </a>
                 </div>
             </SidebarHeader>
-            <SidebarContent className="text-white">
-                <SidebarMenuItem>
-                    <a href="/admin/dashboard/create-lot">Create Lot</a>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <a href="/admin/dashboard/create-lot">Add A User to my Group</a>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <a href="/admin/dashboard/create-lot">Log Out</a>
-                </SidebarMenuItem>
+            <SidebarContent className="text-white text-lg">
+                <SidebarGroup>
+                    <SidebarGroupLabel className="text-white text-lg mb-5 ml-0">Actions</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu className="gap-4">
+                            <SidebarMenuItem>
+                                <a className="flex gap-2 place-items-center" href="/admin/dashboard/create-lot"><MapPlus />Create Lot</a>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <a className="flex gap-2 place-items-center" href="/admin/dashboard/create-lot"><UserPlus />Add A User to my Group</a>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <a className="flex gap-2 place-items-center" href="/admin/dashboard/create-lot"><LogOut />Log Out</a>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
             </SidebarContent>
         </Sidebar>
     )

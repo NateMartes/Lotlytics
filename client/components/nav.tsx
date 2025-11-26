@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/navigation-menu"
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
+import { LogIn, LogOut, Search } from "lucide-react";
 
 interface NavProps {
   isMain?: boolean
@@ -17,13 +18,11 @@ export function Navigation({ isMain = true, hasIcon = true }: NavProps) {
 
   const { isLoading, isAuthenticated, user } = useAuth();
   const loginLink = (
-      <a href="/admin">Log In</a>
+      <a className="flex gap-2 place-items-center" href="/admin"><LogIn />Log In</a>
   )
 
   const userDisplay = isAuthenticated && user ? (
-      <a href="/admin/dashboard">
-        <p>{user.username}'s Dashboard</p>
-      </a>
+      <a className="flex gap-2 place-items-center" href="/admin/dashboard/create-lot"><LogOut />Log Out</a>
     ) : (
       loginLink
     );
@@ -38,9 +37,12 @@ export function Navigation({ isMain = true, hasIcon = true }: NavProps) {
         </a>
       </div>: <div></div>}
       <NavigationMenu>
-        <NavigationMenuList className="md:min-w-md flex justify-end gap-4">
+        <NavigationMenuList className="md:min-w-md flex justify-end gap-6">
           <NavigationMenuItem>
-              <p>About</p>
+              <a className="flex place-items-center gap-2" href="/"><Search />Search</a>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+              <a>About</a>
           </NavigationMenuItem>
           <NavigationMenuItem>
             {userDisplay}          

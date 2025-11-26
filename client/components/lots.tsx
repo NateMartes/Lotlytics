@@ -9,6 +9,7 @@ import {
 import Image from 'next/image';
 import { Map } from "@/components/google-map";
 import { ArrowUpRight } from "lucide-react";
+import { Button } from "./ui/button";
 
 type LotOccupancyLevel = "low" | "medium" | "high";
 
@@ -60,7 +61,7 @@ export function LotItem({ lot }: LotItemProps) {
     console.log(lot.street);
     const { text, color } = getLotLevel(lot.currentVolume, lot.capacity);
     return (
-        <Card className="min-w-100">
+        <Card className="w-100">
             <CardHeader>
                 <div>
                     <div className="flex gap-2 place-items-center">
@@ -150,7 +151,7 @@ function LotListComponent({ hasSearched }: LotListProps, ref: ForwardedRef<LotLi
                                 break;
                         }
                         return (
-                            <button
+                            <Button
                                 key={value}
                                 type="button"
                                 onClick={() => setSelectedFilter(value)}
@@ -161,7 +162,7 @@ function LotListComponent({ hasSearched }: LotListProps, ref: ForwardedRef<LotLi
                                 }`}
                             >
                                 {label}
-                            </button>
+                            </Button>
                         );
                     })}
                 </div>

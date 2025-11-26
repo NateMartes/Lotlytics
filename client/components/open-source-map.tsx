@@ -134,13 +134,14 @@ export function MapComponent({ onAddress }: MapProps) {
 
   return (
     <div className="w-full flex flex-col">
+      <p className="sm:text-md md:text-sm">Lot Location</p>
       <p className="sm:text-md md:text-sm"><span className="font-bold">Note: </span>Parking Lots can only operate within the United States.</p>
       <Card className="mt-4 mb-4 p-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Input
               type="text"
-              placeholder="Search for a location..."
+              placeholder="Search for your lot..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}

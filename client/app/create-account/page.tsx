@@ -13,7 +13,9 @@ import { Footer } from "@/components/footer"
 export default function AdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const router = useRouter();
@@ -25,20 +27,12 @@ export default function AdminPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  const handleLoginSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (username == "" || password == "") {
-        setErrorMessage("Please fill in the form.");
-        return;
-    }
-
-    setLoading(true);
-    setErrorMessage(null);
-
+  const loginNewUser = async () => {
+    
     const url = "http://localhost/api/v1/user/login";
     
+    setLoggingIn(true);
     fetch(url, {
-      credentials: "include",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -55,7 +49,53 @@ export default function AdminPage() {
       })
       .catch((error: Error) => {
         console.error("Login error:", error);
-        setErrorMessage("Invalid username or password. Please try again.");
+        setErrorMessage(error.message);
+        router.push("/admin");
+      })
+      .finally(() => {
+        setLoggingIn(false);
+      });
+  }
+
+  const handleLoginSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (username == "" || password == "") {
+        setErrorMessage("Please fill in the form.");
+        return;
+    }
+
+    if (username.length < 6) {
+        setErrorMessage("Username must be at least 6 characters.");
+        return;
+    }
+
+    setLoading(true);
+    setErrorMessage(null);
+
+    const url = "http://localhost/api/v1/user";
+    console.log(JSON.stringify({ username, email, password }))
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, email, password }),
+    })
+      .then(async (res: Response) => {
+        if (!res.ok) {
+          try {
+            let resBody = await res.json();
+            setErrorMessage(resBody.error);
+          } catch {
+            throw new Error(`Failed to Create Account: Server Error ${res.status}`);
+          }
+        } else {
+          await loginNewUser();
+        }
+      })
+      .catch((error: Error) => {
+        console.error("Error:", error);
+        setErrorMessage(error.message);
       })
       .finally(() => {
         setLoading(false);
@@ -66,7 +106,7 @@ export default function AdminPage() {
     <>
       <Navigation/>
       <div className="flex flex-col place-items-center mt-20 text-2xl lg:text-3xl gap-4">
-        <p className="text-center">Login</p>
+        <p className="text-center">Create an Account</p>
         
         <Card className="md:min-w-96 w-full max-w-md">
           <form className="flex flex-col p-6 gap-4" onSubmit={handleLoginSubmit}>
@@ -81,10 +121,25 @@ export default function AdminPage() {
                 placeholder="Enter your username"
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || loggingIn}
               />
             </div>
 
+            <div className="flex flex-col gap-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                placeholder="Enter your email"
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading || loggingIn}
+              />
+            </div>
+            
             <div className="flex flex-col gap-2">
               <label htmlFor="password" className="text-sm font-medium">
                 Password
@@ -96,29 +151,32 @@ export default function AdminPage() {
                 placeholder="Enter your password"
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || loggingIn}
               />
             </div>
 
             <Button 
               className="bg-blue-950 hover:bg-blue-500 mt-2" 
-              disabled={loading}
+              disabled={loading || loggingIn}
               type="submit"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
                   <Spinner className="size-4" />
-                  Logging in...
+                  Creating Account...
                 </span>
-              ) : (
-                'Login'
-              )}
+              ) : loggingIn ? 
+                <span className="flex items-center gap-2">
+                  <Spinner className="size-4" />
+                  Logging in...
+                </span> : ('Create Account') 
+              }
             </Button>
           </form>
         </Card>
 
           <div className="p-4 mt-4 text-center text-base">
-            No account? <a className="hover:underline" href="/create-account">Create one!</a>
+            Already have an account? <a className="hover:underline" href="/admin">Login</a>
           </div>
 
         {errorMessage ? (
