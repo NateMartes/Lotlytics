@@ -129,6 +129,10 @@ public class JwtService {
         }
         
         // Assume there will only be one match
+        System.out.println("is actaul token expire time after the current time? " +  actualToken.getExpiresAt().isAfter(ZonedDateTime.now(ZoneOffset.UTC)));
+        System.out.println("Current " +  ZonedDateTime.now(ZoneOffset.UTC));
+        System.out.println("Expires at " +  actualToken.getExpiresAt());
+
         ZonedDateTime expireTime = actualToken.getExpiresAt();
         return expireTime.isAfter(ZonedDateTime.now(ZoneOffset.UTC));
     }
@@ -141,9 +145,7 @@ public class JwtService {
      * @return true if the token is not expired.
      */
     private Boolean isTokenExpired(String token, String username) {
-        return
-        extractExpiration(token).isBefore(ZonedDateTime.now(ZoneOffset.UTC)) &&
-        isValidTokenInDatabase(token, username);
+        return !isValidTokenInDatabase(token, username);
     }
 
     /**
@@ -153,7 +155,9 @@ public class JwtService {
      * @return true if the token is valid.
      */
     public Boolean validateToken(String token, UserDetails userDetails) {
+        System.out.println("Checking if token is valid: " + token);
         final String username = extractUsername(token);
+        System.out.println("is token expire time before the current time? " +  extractExpiration(token).isBefore(ZonedDateTime.now(ZoneOffset.UTC)));
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token, username));
     }
 }

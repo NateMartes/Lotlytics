@@ -125,4 +125,23 @@ public class UserController extends GenericController {
         payload.put("username", userDetails.getUsername());
         return new ResponseEntity<Map<String, String>>(payload, HttpStatus.OK);
     }
+
+    /**
+     * The logoutCurrentUser method handles the /api/v1/user/logout endpoint.
+     * The method throws a 401 if the user is not logged in.
+     * 
+     * @param username the username of a user.
+     * @return A User.
+     */
+    @PostMapping(path = "/logout")
+    public ResponseEntity<?> logoutCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        log.info(String.format(endpointMsg, "POST", "/logout"));
+
+        // If the token is valid, then userDetails will not be null and we can't sign out the user
+        if (userDetails == null) {
+            return new ResponseEntity<ErrorMessage>(HttpStatus.UNAUTHORIZED);
+        }
+
+        return callVoidServiceMethod(() -> userService.logoutUser(userDetails.getUsername()), HttpStatus.NO_CONTENT);
+    }
 }

@@ -1,5 +1,7 @@
 package com.lotlytics.api.services;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -142,6 +144,28 @@ public class UserService implements UserDetailsService {
         userTokensRepository.save(userToken);
 
         return token;
+    }
+
+    /**
+     * The logoutUser method removes the token that is stored for this user, invalidating their login token.
+     * 
+     * @param username A username
+     * @throws NotFoundException If the user or token does not exist
+     */
+    public void logoutUser(String username) throws NotFoundException {
+
+        User u = getUserByUsername(username);
+        UserToken example = new UserToken();
+        example.setUserId(u.getId());
+
+        List<UserToken> matches = userTokensRepository.findAll(Example.of(example));
+        if (matches.size() == 0) {
+            throw new NotFoundException("User token not found");
+        }
+
+        userTokensRepository.deleteAll(matches);
+
+        log.info("User " + matches.get(0).getId() + "'s tokens were expired");
     }
 
     /**
