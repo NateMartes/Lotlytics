@@ -46,7 +46,7 @@ export function CreateLotForm() {
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
-            //router.push("/admin");
+            router.push("/admin");
         }
     }, [isLoading, isAuthenticated, router]);
 

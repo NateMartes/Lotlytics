@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card"
 import Image from 'next/image';
 import { Map } from "@/components/google-map";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 
 type LotOccupancyLevel = "low" | "medium" | "high";
@@ -58,26 +58,31 @@ function getLotLevel(volume: number, capacity: number) {
 }
 
 export function LotItem({ lot }: LotItemProps) {
-    console.log(lot.street);
     const { text, color } = getLotLevel(lot.currentVolume, lot.capacity);
     return (
-        <Card className="w-100">
+        <Card className="w-full h-full flex flex-col justify-between">
             <CardHeader>
                 <div>
-                    <div className="flex gap-2 place-items-center">
-                        <p className="max-w-50">{lot.name}</p>
-                        <span className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${color}`}>
-                            {text}
-                        </span>
-                        <a className="justify-self-end-safe">
-                            <ArrowUpRight />
+                    <div className="flex gap-2 place-items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <p>{lot.name}</p>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${color} text-white`}>
+                                {text}
+                            </span>
+                        </div>
+                        <a href="#" className="text-muted-foreground hover:text-foreground">
+                            <ArrowUpRight size={20} />
                         </a>
                     </div>
-                    <Map street={lot.street} city={lot.city} state={lot.state} zip={lot.zip}/>
-                    <p className="text-sm text-muted-foreground">{lot.currentVolume} / {lot.capacity}</p>
+                    <div className="my-2">
+                        <Map street={lot.street} city={lot.city} state={lot.state} zip={lot.zip}/>
+                    </div>
+                    <p className="text-sm text-muted-foreground font-medium">{lot.currentVolume} / {lot.capacity} spots taken</p>
                 </div>
             </CardHeader>
-            <CardContent><p className="max-w-100 text-sm text-wrap">{lot.street}, {lot.city}, {lot.state}, {lot.zip}</p></CardContent>
+            <CardContent>
+                <p className="text-sm text-muted-foreground">{lot.street}, {lot.city}, {lot.state}, {lot.zip}</p>
+            </CardContent>
             <CardFooter>{getLotMapLinks()}</CardFooter>
         </Card>
     );
@@ -102,19 +107,25 @@ const filterOptions: { label: string; value: LotFilterOption; color: string }[] 
     { label: "High", value: "high", color: "bg-[#E57373]"}
 ];
 
+const ITEMS_PER_PAGE = 6;
+
 function LotListComponent({ hasSearched }: LotListProps, ref: ForwardedRef<LotListHandle>) {
     const [lots, setLots] = useState<Lot[]>([]);
     const [selectedFilter, setSelectedFilter] = useState<LotFilterOption>("all");
+    const [currentPage, setCurrentPage] = useState<number>(1);
 
     useImperativeHandle(ref, () => ({
         setLots: (incomingLots: Lot[]) => {
             setLots(incomingLots ?? []);
+            setCurrentPage(1);
         },
         clearLots: () => {
             setLots([]);
+            setCurrentPage(1);
         },
         setFilter: (filter: LotFilterOption) => {
             setSelectedFilter(filter);
+            setCurrentPage(1);
         }
     }), []);
 
@@ -122,39 +133,74 @@ function LotListComponent({ hasSearched }: LotListProps, ref: ForwardedRef<LotLi
         if (selectedFilter === "all") {
             return lots;
         }
-
         return lots.filter((lot: Lot) => {
             const { level } = getLotLevel(lot.currentVolume, lot.capacity);
             return level === selectedFilter;
         });
     }, [lots, selectedFilter]);
 
+    const totalPages = Math.ceil(filteredLots.length / ITEMS_PER_PAGE);
+    
+    const currentDisplayedLots = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        return filteredLots.slice(startIndex, endIndex);
+    }, [filteredLots, currentPage]);
+
+    const handleFilterClick = (value: LotFilterOption) => {
+        setSelectedFilter(value);
+        setCurrentPage(1);
+    };
+
+    const getPageControls = () => {
+        return (<>
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-4 mt-4">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        
+                        <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
+
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
+            </>
+        );
+    }
+
     const hasLots = lots.length > 0;
     const hasFilteredLots = filteredLots.length > 0;
 
     return (
-        <div className="flex flex-col max-w-400 mx-auto">
+        <div className="flex flex-col items-center w-full space-y-6">
             {hasLots ? (
-                <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+                <div className="flex flex-wrap items-center justify-center gap-3">
                     {filterOptions.map(({ label, value }) => {
                         const isActive = selectedFilter === value;
                         let colorClass = "hover:bg-muted"
                         switch(value) {
-                            case "low":
-                                colorClass = "hover:bg-[#66BB6A]";
-                                break;
-                            case "medium":
-                                colorClass = "hover:bg-[#BDBDBD]";
-                                break;
-                            case "high":
-                                colorClass = "hover:bg-[#E57373]";
-                                break;
+                            case "low": colorClass = "hover:bg-[#66BB6A] hover:text-white"; break;
+                            case "medium": colorClass = "hover:bg-[#BDBDBD] hover:text-white"; break;
+                            case "high": colorClass = "hover:bg-[#E57373] hover:text-white"; break;
                         }
                         return (
                             <Button
                                 key={value}
                                 type="button"
-                                onClick={() => setSelectedFilter(value)}
+                                onClick={() => handleFilterClick(value)}
                                 className={`rounded-full border px-4 py-2 text-base transition ${
                                     isActive
                                         ? "bg-primary text-primary-foreground border-primary"
@@ -176,13 +222,17 @@ function LotListComponent({ hasSearched }: LotListProps, ref: ForwardedRef<LotLi
                 <p className="text-center text-base text-muted-foreground">No parking lots match this filter.</p>
             ) : null}
 
+            {getPageControls()}
             {hasFilteredLots ? (
-                <div className="flex justify-center gap-4 flex-wrap">
-                    {filteredLots.map((lot: Lot, index: number) => (
-                        <LotItem key={`${lot.id}-${index}`} lot={lot} />
-                    ))}
+                <div className="w-full max-w-6xl flex flex-col gap-6 p-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {currentDisplayedLots.map((lot: Lot) => (
+                            <LotItem key={lot.id} lot={lot} />
+                        ))}
+                    </div>
                 </div>
             ) : null}
+            {getPageControls()}
         </div>
     );
 }

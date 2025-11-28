@@ -28,15 +28,15 @@ export function DashboardMenu() {
                 <SidebarGroup>
                     <SidebarGroupLabel className="text-white text-lg mb-5 ml-0">Actions</SidebarGroupLabel>
                     <SidebarGroupContent>
-                        <SidebarMenu className="gap-4">
+                        <SidebarMenu>
                             <SidebarMenuItem>
-                                <a className="flex gap-2 place-items-center" href="/admin/dashboard/create-lot"><MapPlus />Create Lot</a>
+                                <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><MapPlus />Create Lot</a>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <a className="flex gap-2 place-items-center" href="/admin/dashboard/create-lot"><UserPlus />Add A User to my Group</a>
+                                <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><UserPlus />Add A User to my Group</a>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <a className="flex gap-2 place-items-center" href="/admin/dashboard/create-lot"><LogOut />Log Out</a>
+                                <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><LogOut />Log Out</a>
                             </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
