@@ -23,7 +23,7 @@ import com.lotlytics.api.entites.event.Event;
 @Setter
 @ConfigurationProperties("aws.dynamodb")
 public class AwsDynamoProperties {
-    private String endpoint;
+    private String endpoint = "";
     private String region;
     private String accessKey;
     private String secretKey;

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
@@ -44,17 +45,25 @@ public class DynamoDBConfig {
      */
     @Bean
     public DynamoDbClient dynamoDbClient() {
-        return DynamoDbClient.builder()
-                .endpointOverride(java.net.URI.create(properties.getEndpoint()))
-                .region(properties.getRegion())
-                .credentialsProvider(
+
+        DynamoDbClientBuilder client = DynamoDbClient
+                        .builder()
+                        .region(properties.getRegion())
+                        .credentialsProvider(
                         StaticCredentialsProvider.create(
                             AwsBasicCredentials.create(properties.getAccessKey(), 
                                                         properties.getSecretKey()
                                                 )
                             )
-                )
-                .build();
+                        );
+
+        // Use AWS DynamoDB instance if no endpoint is defined
+        System.out.println("DynamoDB Endpoint: " + properties.getEndpoint());
+        if (!properties.getEndpoint().equals("")) {
+            client.endpointOverride(java.net.URI.create(properties.getEndpoint()));
+        }
+
+        return client.build();
     }
 
     /**

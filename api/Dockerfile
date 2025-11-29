@@ -21,6 +21,8 @@ RUN mkdir -p /home/lotlytics-api-agent && \
 USER lotlytics-api-agent
 WORKDIR /home/lotlytics-api-agent
 
+ENV SPRING_PROFILES_ACTIVE=container
+
 # Copy build file from prior layer
 COPY --from=build /build/target/${PROJECT_NAME}-${PROJECT_VERSION}.jar app.jar
 

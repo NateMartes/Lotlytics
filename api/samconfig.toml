@@ -5,7 +5,7 @@ use_container = true
 skip_pull_image = false
 
 [default.deploy.parameters]
-stack_name = "lotlytics-api-stack"
+stack_name = "lotlytics-api"
 region = "us-east-1"
 resolve_s3 = true
 s3_prefix = "lotlytics-api-stack"

@@ -2,15 +2,31 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Deploy The Lotlytics API Lambda function with API Gateway using AWS SAM
 
-Globals:
-  Function:
-    MemorySize: 2048
-    Runtime: java21
-    Architectures:
-      - x86_64
-    AutoPublishAlias: prod
-    SnapStart:
-      ApplyOn: PublishedVersions
+Parameters:
+  DatabaseUrl:
+    Description: The JDBC connection URL for the SQL database.
+    Type: String
+    NoEcho: true
+
+  DatabaseUsername:
+    Description: Username for the SQL database.
+    Type: String
+    NoEcho: true
+
+  DatabasePassword:
+    Description: Password for the SQL database.
+    Type: String
+    NoEcho: true
+
+  DynamoDBTable:
+    Description: DynamoDB Table this Lambda function will interact with.
+    Type: String
+    NoEcho: true
+
+  CorsAllowedOrigin:
+    Description: The allowed origin URL for CORS.
+    Type: String
+    NoEcho: true
 
 Resources:
   LotlyticsApiOnLambda:
@@ -19,7 +35,26 @@ Resources:
       FunctionName: lotlytics-api-lambda
       CodeUri: .
       Handler: com.lotlytics.api.LambdaHandler::handleRequest
+      MemorySize: 2048
+      Timeout: 5
+      Runtime: java21
+      Architectures:
+        - x86_64
+      AutoPublishAlias: prod
+      SnapStart:
+        ApplyOn: PublishedVersions
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDBTable
       Description: The Lotlytics RESTful API Lambda function running on Spring Boot 3
+      Environment:
+        Variables:
+          SPRING_PROFILES_ACTIVE: production
+          LOTLYTICS_DB_ENDPOINT: !Ref DatabaseUrl
+          LOTLYTICS_DB_USERNAME: !Ref DatabaseUsername
+          LOTLYTICS_DB_PASSWORD: !Ref DatabasePassword
+          LOTLYTICS_DB_EVENTS_TABLE_NAME: !Ref DynamoDBTable
+          LOTLYTICS_SITE_ORIGIN: !Ref CorsAllowedOrigin
       Events:
         ApiEvent:
           Type: Api
