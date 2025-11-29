@@ -8,6 +8,7 @@ on:
 # Needed for AWS CLI
 permissions:
       id-token: write
+      actions: write
       contents: read
       
 jobs:
@@ -42,7 +43,24 @@ jobs:
     needs: deploy
     environment: production
     steps:
+      - uses: actions/checkout@v4
       - name: Set up initialization environment
         run: sudo apt install postgresql-client-16
+      - name: Create database (stop CI/CD if database already exists)
+      - run: |
+            PGPASSWORD="${{ secrets.LOTLYTICS_DB_PASSWORD }}" createdb -h "${{ secrets.LOTLYTICS_DB_DOMAIN }}" -U "${{ secrets.LOTLYTICS_DB_USERNAME }}" lotlytics-db
+            EXIT_CODE=$?
+        
+            # Check the exit code
+            if [ $EXIT_CODE -ne 0 ]; then
+              echo "Database already exists, stopping to not overwrite data"              
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} gh api \
+                --method POST \
+                -H "Accept: application/vnd.github.com/v3+json" \
+                /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel
+              sleep 30
+            else
+              echo "Database '$DB_NAME' created successfully."
+            fi
       - name: Initialize database
         run: PGPASSWORD="${{ secrets.LOTLYTICS_DB_PASSWORD }}" psql -h "${{ secrets.LOTLYTICS_DB_DOMAIN }}" -U "${{ secrets.LOTLYTICS_DB_USERNAME }}" -d lotlytics-db -f ./database/postgresql/init_db.sql 
