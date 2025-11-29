@@ -28,7 +28,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
         with:
           name: lotlytics-db
-          template: ./database/dynamodb/template.yml
+          template: ./database/postgresql/template.yml
           parameter-overrides: 
             DBUser="${{ secrets.LOTLYTICS_DB_USERNAME }}",
             DBPassword="${{ secrets.LOTLYTICS_DB_PASSWORD }}",
@@ -41,4 +41,4 @@ jobs:
     environment: production
     steps:
       - name: Set up initialization environment
-        run: apt install postgresql-client-16
+        run: sudo apt install postgresql-client-16
