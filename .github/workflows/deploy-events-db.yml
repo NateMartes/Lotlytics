@@ -29,5 +29,6 @@ jobs:
         with:
           name: lotlytics-events-db
           template: ./database/dynamodb/template.yml
+          no-fail-on-empty-changeset: 1
           parameter-overrides: 
             TableName="${{ secrets.LOTLYTICS_DB_EVENTS_TABLE_NAME }}"
