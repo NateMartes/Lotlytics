@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'DynamoDB Table for Lolytics Events'
+
+Parameters:
+  TableName:
+    Description: The Table of this Database
+    Type: String
+    Default: Lolytics-Events
+
+Resources:
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: lotId
+          AttributeType: N
+        - AttributeName: capturedAt
+          AttributeType: S
+        - AttributeName: groupId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: capturedAt
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: LotCapturedAtIndex
+          KeySchema:
+            - AttributeName: lotId
+              KeyType: HASH
+            - AttributeName: capturedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GroupCapturedAtIndex
+          KeySchema:
+            - AttributeName: groupId
+              KeyType: HASH
+            - AttributeName: capturedAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+Outputs:
+  EventsTableName:
+    Description: Name of the Events table
+    Value: !Ref EventsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-EventsTable'
