@@ -41,8 +41,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+          aws-secret-access-key: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           aws-region: us-east-1
           
       - name: Build and Deploy SAM
@@ -55,8 +55,8 @@ jobs:
                      --resolve-s3 \
                      --capabilities CAPABILITY_IAM \
                      --parameter-overrides \
-                     DatabaseUrl=${{ secrets.LOTLYTICS_DB_ENDPOINT }} \
-                     DatabaseUsername=${{ secrets.LOTLYTICS_DB_USERNAME }} \
-                     DatabasePassword=${{ secrets.LOTLYTICS_DB_PASSWORD }} \
-                     DynamoDBTable=${{ secrets.LOTLYTICS_DB_EVENTS_TABLE_NAME }} \
-                     CorsAllowedOrigin=${{ secrets.LOTLYTICS_SITE_ORIGIN }}
+                     DatabaseUrl="${{ secrets.LOTLYTICS_DB_ENDPOINT }}" \
+                     DatabaseUsername="${{ secrets.LOTLYTICS_DB_USERNAME }}" \
+                     DatabasePassword="${{ secrets.LOTLYTICS_DB_PASSWORD }}" \
+                     DynamoDBTable="${{ secrets.LOTLYTICS_DB_EVENTS_TABLE_NAME }}" \
+                     CorsAllowedOrigin="${{ secrets.LOTLYTICS_SITE_ORIGIN }}"
