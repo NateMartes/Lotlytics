@@ -1,6 +1,7 @@
 # Lotlytics - Travel Better, Park Smarter
 
 Visit the site - https://lotlytics.nathanielmartes.com/
+
 View the docs - https://lotlytics-api-docs.pages.dev/
 
 **Lotlytics** is a web application that allows users to create and view parking lots from different services to plan their trips and reduce overall stress.  
