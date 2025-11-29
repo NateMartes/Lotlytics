@@ -11,15 +11,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 21
-      uses: actions/setup-java@v4
+    - uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'corretto'
         cache: maven
         
     - name: Build API with Maven
-    - run: cd ./api
-    - run: mvn clean package
+      working-directory: ./api
+      run: mvn clean package
       
   deploy:
     runs-on: ubuntu-latest
@@ -34,13 +34,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
       - name: Deploy to AWS
-      - run: sam build --use-container
-      - run: sam deploy --no-confirm-changeset \
-                        --no-fail-on-empty-changeset \
-                        --stack-name lotlytics-api \
-                        --parameter-overrides \
-                        DatabaseUrl=${{ secrets.LOTLYTICS_DB_ENDPOINT }} \
-                        DatabaseUsername=${{ secrets.LOTLYTICS_DB_USERNAME }} \
-                        DatabasePassword=${{ secrets.LOTLYTICS_DB_PASSWORD }} \
-                        DynamoDBTable=${{ secrets.LOTLYTICS_DB_EVENTS_TABLE_NAME }} \
-                        CorsAllowedOrigin=${{ secrets.LOTLYTICS_SITE_ORIGIN }}
+        working-directory: ./api
+        run:
+          sam build --use-container
+          sam deploy --no-confirm-changeset \
+                          --no-fail-on-empty-changeset \
+                          --stack-name lotlytics-api \
+                          --parameter-overrides \
+                          DatabaseUrl=${{ secrets.LOTLYTICS_DB_ENDPOINT }} \
+                          DatabaseUsername=${{ secrets.LOTLYTICS_DB_USERNAME }} \
+                          DatabasePassword=${{ secrets.LOTLYTICS_DB_PASSWORD }} \
+                          DynamoDBTable=${{ secrets.LOTLYTICS_DB_EVENTS_TABLE_NAME }} \
+                          CorsAllowedOrigin=${{ secrets.LOTLYTICS_SITE_ORIGIN }}
