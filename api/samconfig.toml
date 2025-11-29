@@ -9,7 +9,6 @@ stack_name = "lotlytics-api"
 region = "us-east-1"
 resolve_s3 = true
 s3_prefix = "lotlytics-api-stack"
-profile = "lotlytics-api-lambda-role"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 disable_rollback = true
