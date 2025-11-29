@@ -1,0 +1,33 @@
+name: Deploy Events Database
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+# Needed for AWS CLI
+permissions:
+      id-token: write
+      contents: read
+      
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Set up deployment environment
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+          aws-secret-access-key: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          aws-region: us-east-1
+      - name: Build Cloudformation Stack
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.2.0
+        with:
+          name: lotlytics-events-db
+          template: ./database/dynamodb/template.yml
+          parameter-overrides: 
+            TableName="${{ secrets.LOTLYTICS_DB_EVENTS_TABLE_NAME }}"
