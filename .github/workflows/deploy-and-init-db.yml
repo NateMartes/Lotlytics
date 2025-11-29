@@ -44,7 +44,5 @@ jobs:
     steps:
       - name: Set up initialization environment
         run: sudo apt install postgresql-client-16
-      - name: Add credentials for database access
-        run: export PGPASSWORD="${{ secrets.LOTLYTICS_DB_PASSWORD }}"
       - name: Initialize database
-        run: psql -h "${{ secrets.LOTLYTICS_DB_DOMAIN }}" -U "${{ secrets.LOTLYTICS_DB_USERNAME }}" -d lotlytics-db -f ./database/postgresql/init_db.sql
+        run: psql -h "${{ secrets.LOTLYTICS_DB_DOMAIN }}" -U "${{ secrets.LOTLYTICS_DB_USERNAME }}" -d lotlytics-db -f ./database/postgresql/init_db.sql < "${{ secrets.LOTLYTICS_DB_PASSWORD }}"
