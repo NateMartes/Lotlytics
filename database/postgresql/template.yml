@@ -1,0 +1,149 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lotlytics RDS Instance with Public IP Access
+
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: lotlytics-db
+  DBUser:
+    Type: String
+    Description: Master username.
+    NoEcho: true
+  DBPassword:
+    Type: String
+    Description: Master password.
+    NoEcho: true
+  VPCCidrBlock:
+    Type: String
+    Description: The CIDR Block of the database's VPC.
+    NoEcho: true
+  Subnet1CidrBlock:
+    Type: String
+    Description: The CIDR Block of the database's 1st subnet.
+    NoEcho: true
+  Subnet2CidrBlock:
+    Type: String
+    Description: The CIDR Block of the database's 2nd subnet.
+    NoEcho: true
+
+Resources:
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-vpc
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: "us-east-1a"
+      CidrBlock: !Ref Subnet1CidrBlock
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: "us-east-1b"
+      CidrBlock: !Ref Subnet2CidrBlock
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  DBSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+        DBSubnetGroupDescription: Subnets for the publicly accessible DB instance
+        SubnetIds:
+          - !Ref PublicSubnet1
+          - !Ref PublicSubnet2
+
+  DBSecuritytGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub ${EnvironmentName}  DB Secuirty Group
+      GroupName: !Sub ${EnvironmentName} DB Secuirty Group
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-public-rt
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  RDSDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: '16.3'
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: '20'
+      DBInstanceIdentifier: !Sub ${EnvironmentName}
+      MasterUsername: !Ref DBUser
+      MasterUserPassword: !Ref DBPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref DBSecuritytGroup
+      PubliclyAccessible: 'true'
+      Tags:
+        - Key: Name
+          Value: Public-RDS-Instance
+
+Outputs:
+  RDSJDBCConnection:
+    Description: The JDBC connection string for the database
+    Value: !Sub 'jdbc:postgresql://${RDSDBInstance.Endpoint.Address}:5432/postgres'
+  RDSDBAddress:
+    Description: The DNS endpoint address for the database
+    Value: !GetAtt RDSDBInstance.Endpoint.Address
