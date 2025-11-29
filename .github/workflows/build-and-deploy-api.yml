@@ -18,4 +18,4 @@ jobs:
         cache: maven
         
     - name: Build API with Maven
-      run: cd ./api && mvn build
+      run: cd ./api && mvn clean package
