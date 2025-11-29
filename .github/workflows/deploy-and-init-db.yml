@@ -49,4 +49,4 @@ jobs:
       - name: Correct permissions for password file
         run: chmod 0600 ~/.pgpass
       - name: Initialize database
-        run: psql -U "${{ secrets.LOTLYTICS_DB_USERNAME }}" -d lotlytics-db -f ./database/postgresql/init_db.sql
+        run: psql -h "${{ secrets.LOTLYTICS_DB_DOMAIN }}" -U "${{ secrets.LOTLYTICS_DB_USERNAME }}" -d lotlytics-db -f ./database/postgresql/init_db.sql
