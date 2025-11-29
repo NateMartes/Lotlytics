@@ -43,7 +43,8 @@ jobs:
     needs: deploy
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
       - name: Set up initialization environment
         run: sudo apt install postgresql-client-16
       - name: Create database (stop CI/CD if database already exists)
