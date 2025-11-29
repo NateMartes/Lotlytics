@@ -48,10 +48,9 @@ jobs:
       - name: Set up initialization environment
         run: sudo apt install postgresql-client-16
       - name: Create database (stop CI/CD if database already exists)
-      - run: |
+        run: |
             PGPASSWORD="${{ secrets.LOTLYTICS_DB_PASSWORD }}" createdb -h "${{ secrets.LOTLYTICS_DB_DOMAIN }}" -U "${{ secrets.LOTLYTICS_DB_USERNAME }}" lotlytics-db
             EXIT_CODE=$?
-        
             # Check the exit code
             if [ $EXIT_CODE -ne 0 ]; then
               echo "Database already exists, stopping to not overwrite data"              
