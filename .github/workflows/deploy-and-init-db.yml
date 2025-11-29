@@ -48,6 +48,8 @@ jobs:
       - name: Set up initialization environment
         run: sudo apt install postgresql-client-16
       - name: Create database (stop CI/CD if database already exists)
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
             set +e
             PGPASSWORD="${{ secrets.LOTLYTICS_DB_PASSWORD }}" createdb -h "${{ secrets.LOTLYTICS_DB_DOMAIN }}" -U "${{ secrets.LOTLYTICS_DB_USERNAME }}" lotlytics-db
@@ -56,7 +58,7 @@ jobs:
             # Check the exit code
             if [ $EXIT_CODE -eq 1 ]; then
               echo "Database already exists, stopping to not overwrite data"              
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} gh api \
+              gh api \
                 --method POST \
                 -H "Accept: application/vnd.github.com/v3+json" \
                 /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel
