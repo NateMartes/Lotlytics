@@ -77,7 +77,7 @@ Resources:
         BasePath:
           - prod
         CertificateArn: arn:aws:acm:us-east-1:143223323788:certificate/1a00f9a0-fb18-459c-9da2-a0472d651062
-        DomainName: lotyltics-api.nathanielmartes.com
+        DomainName: lotlytics-api.nathanielmartes.com
 
 
 Outputs:
