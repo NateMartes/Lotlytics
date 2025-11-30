@@ -81,6 +81,7 @@ CorsAllowedOrigin=${LOTLYTICS_SITE_ORIGIN}
 ```
 
 **Note**: The `DatabaseURL` paramter is the full JDBC url that the JDBC API will use to try and connect to the SQL database. If your database does not exist, it will be very, very slow.
+**Note**: When deploying the API stack to AWS for the first time, the domain name attached to the API will get a API Gateway domain name that you must add to your DNS provider's CNAME record.
 
 ### Lotlytics SQL Database `./database/postgres`
 
