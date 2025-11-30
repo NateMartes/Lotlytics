@@ -57,15 +57,22 @@ function getLotLevel(volume: number, capacity: number) {
     }
 }
 
+function fixLotName(lotName: string) {
+    if (lotName.length > 20) { 
+        return lotName.substring(0, 20) + "..."
+    } else {
+        return lotName;
+    }
+}
 export function LotItem({ lot }: LotItemProps) {
     const { text, color } = getLotLevel(lot.currentVolume, lot.capacity);
     return (
-        <Card className="w-full h-full flex flex-col justify-between">
+        <Card className="w-full h-full flex flex-col justify-between overflow-hidden">
             <CardHeader>
                 <div>
                     <div className="flex gap-2 place-items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <p>{lot.name}</p>
+                            <p title={lot.name}>{fixLotName(lot.name)}</p>
                             <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${color} text-white`}>
                                 {text}
                             </span>

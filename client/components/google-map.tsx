@@ -15,7 +15,7 @@ const Map: React.FC<MapProps> = ({
   state,
   zip,
   width = "100%",
-  height = 400
+  height = 300
 }) => {
   const address = `${street}, ${city}, ${state} ${zip}`;
   const query = encodeURIComponent(address);
