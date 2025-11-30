@@ -72,6 +72,8 @@ INSERT INTO groups (id, name) VALUES
 ('wilkes-1a2b3c4d', 'wilkes'), 
 ('google-5e6f7g8h', 'google'), 
 ('datadog-9i0j1k2l', 'datadog');
+('jerseytest-4df31ws1', 'jerseytest');
+
 
 INSERT INTO lots (group_id, capacity, current_volume, name, street, city, state, zip) VALUES
 ('wilkes-1a2b3c4d', 50, 10, 'Lot A', '123 Main St', 'Wilkes-Barre', 'PA', '18711'),
@@ -81,6 +83,9 @@ INSERT INTO lots (group_id, capacity, current_volume, name, street, city, state,
 ('wilkes-1a2b3c4d', 50, 10, 'Lot E', '123 Main St', 'Wilkes-Barre', 'PA', '18711'),
 ('google-5e6f7g8h', 30, 5, 'Lot C', '1600 Amphitheatre Pkwy', 'Mountain View', 'CA', '94043'),
 ('datadog-9i0j1k2l', 80, 40, 'Lot D', '500 Tech Dr', 'Boston', 'MA', '02110');
+('datadog-9i0j1k2l', 80, 40, 'Lot D', '500 Tech Dr', 'Boston', 'MA', '02110');
+('jerseytest-4df31ws1', 70, 30, 'Newark Liberty International Airport', 'Newark Liberty International Airport', 'Newark', 'NJ', '07114');
+
 
 INSERT INTO users (id, username, email, password) VALUES
 (1, 'cosmic', 'myemail@gmail.com', '$2a$15$QhBrq.LVq8tchg5kPajnTejHPxEzUDHWcfSDxULez.Pl0NI8KiKNa');
