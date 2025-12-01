@@ -105,7 +105,7 @@ export default function AdminPage() {
   return (
     <>
       <Navigation/>
-      <div className="flex flex-col place-items-center mt-20 text-2xl lg:text-3xl gap-4">
+      <div className="flex flex-col place-items-center mt-20 text-2xl lg:text-3xl gap-4 p-10 md:p-0">
         <p className="text-center">Create an Account</p>
         
         <Card className="md:min-w-96 w-full max-w-md">
