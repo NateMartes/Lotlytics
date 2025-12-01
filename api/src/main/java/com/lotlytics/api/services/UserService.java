@@ -82,7 +82,7 @@ public class UserService implements UserDetailsService {
             throw new ConflictException("Username already exists.");
         }
         if (isAUserByEmail(email)) {
-            throw new ConflictException("User already is using this email.");
+            throw new ConflictException("Email already exists.");
         }
         
         String hashedPassword = passwordService.hashPassword(payload.getPassword());
