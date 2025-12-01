@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { LogOut, MapPlus, UserPlus } from "lucide-react";
+import { LogOut, MapPlus, UserPlus, Users } from "lucide-react";
 import Image from 'next/image';
 
 
@@ -33,7 +33,10 @@ export function DashboardMenu() {
                                 <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><MapPlus />Create Lot</a>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><UserPlus />Add A User to my Group</a>
+                                <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><Users />Join a Parking Group</a>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><UserPlus />Add A User to my Parking Group</a>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
                                 <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><LogOut />Log Out</a>
