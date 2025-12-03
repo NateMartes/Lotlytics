@@ -23,6 +23,7 @@ export function MapComponent({ onAddress }: MapProps) {
   const LeafletRef = useRef<any>(null);
 
   const handleNewAddress = (addressObject: AddressObject) => {
+    console.log(addressObject)
     if (!onAddress || !addressObject) {
       return;
     }

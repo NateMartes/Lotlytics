@@ -19,7 +19,7 @@ function capitalizeFirstLetter(val: string) {
 
 function getGroupComponent(group: Group) {
     return (
-        <Card className="w-75 md:w-100 p-3">
+        <Card className="w-75 md:w-100 p-3" key={group.id}>
             <CardHeader className="text-xl">{capitalizeFirstLetter(group.name)}</CardHeader>
             <CardContent>
                 <p className="text-sm text-muted-foreground font-medium">ID: {group.id}</p>

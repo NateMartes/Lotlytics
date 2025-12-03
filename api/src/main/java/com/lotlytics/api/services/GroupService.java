@@ -70,8 +70,11 @@ public class GroupService {
      * @return A list of groups found.
      */
     public List<Group> getGroup(String name) {
+        if (name.equals("")) {
+            return getAllGroups();
+        }
         Group g = new Group();
-        g.setName(name);
+        g.setName(name.toLowerCase());
         return groupRepository.findAll(Example.of(g));
     }
 
