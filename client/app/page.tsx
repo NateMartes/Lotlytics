@@ -21,7 +21,7 @@ export default function Home() {
     event.preventDefault();
 
     setSearching(true);
-    const url = "https://lotlytics.nathanielmartes.com/api/v1/lot"
+    const url = "https://lotlytics-api.nathanielmartes.com/api/v1/lot"
 
     fetch(url)
       .then((res: Response) => {

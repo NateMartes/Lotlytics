@@ -23,13 +23,13 @@ export default function JoinGroupPage() {
         if (!isLoading && !isAuthenticated) {
             router.push("/admin");
         } else {
-            getGroups("https://lotlytics.nathanielmartes.com/api/v1/group");
+            getGroups("https://lotlytics-api.nathanielmartes.com/api/v1/group");
         }
     }, [isAuthenticated,  isLoading, router])
 
     const handleSearchSubmit = (event: FormEvent) => {
         event.preventDefault();
-        getGroups(`https://lotlytics.nathanielmartes.com/api/v1/group?name=${searchInput}`);
+        getGroups(`https://lotlytics-api.nathanielmartes.com/api/v1/group?name=${searchInput}`);
     }
 
     const getGroups = async (link: string) => {

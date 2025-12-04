@@ -122,7 +122,7 @@ export function CreateLotForm() {
         };
 
         try {
-            const response = await fetch(`https://lotlytics.nathanielmartes.com/api/v1/?groupId=${groupId}`, {
+            const response = await fetch(`https://lotlytics-api.nathanielmartes.com/api/v1/?groupId=${groupId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

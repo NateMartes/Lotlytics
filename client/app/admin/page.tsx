@@ -35,7 +35,7 @@ export default function AdminPage() {
     setLoading(true);
     setErrorMessage(null);
 
-    const url = "https://lotlytics.nathanielmartes.com/api/v1/user/login";
+    const url = "https://lotlytics-api.nathanielmartes.com/api/v1/user/login";
     
     fetch(url, {
       credentials: "include",
