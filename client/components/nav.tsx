@@ -22,7 +22,7 @@ export function Navigation({ isMain = true, hasIcon = true }: NavProps) {
   
   const logoutUser = () => {
 
-    const url = "http://localhost/api/v1/user/logout";
+    const url = "https://lotlytics-api.nathanielmartes.com/api/v1/user/logout";
     
     fetch(url, {
       credentials: "include",

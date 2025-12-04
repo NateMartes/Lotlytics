@@ -35,12 +35,14 @@ export function DashboardMenu() {
                             <SidebarMenuItem>
                                 <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/join-group"><Users />Join a Parking Group</a>
                             </SidebarMenuItem>
+                            {/*
                             <SidebarMenuItem>
                                 <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><UserPlus />Add A User to my Parking Group</a>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
                                 <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><LogOut />Log Out</a>
                             </SidebarMenuItem>
+                            */}
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
