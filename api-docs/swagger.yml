@@ -12,6 +12,7 @@ info:
       - **/group/member** — Manage group members and their roles.
       - **/role** — Manage roles that can be assigned to group members.
       - **/event** — Create, and record event data.
+      - **/user** — Manage user accounts and authentication.
   
     All endpoints follow RESTful principles and are stateless, ensuring 
     predictable, consistent, and scalable interactions.

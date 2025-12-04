@@ -29,7 +29,7 @@ export default function AdminPage() {
 
   const loginNewUser = async () => {
     
-    const url = "http://localhost/api/v1/user/login";
+    const url = "https://lotlytics.nathanielmartes.com/api/v1/user/login";
     
     setLoggingIn(true);
     fetch(url, {
@@ -72,7 +72,7 @@ export default function AdminPage() {
     setLoading(true);
     setErrorMessage(null);
 
-    const url = "http://localhost/api/v1/user";
+    const url = "https://lotlytics.nathanielmartes.com/api/v1/user";
     console.log(JSON.stringify({ username, email, password }))
     fetch(url, {
       method: "POST",

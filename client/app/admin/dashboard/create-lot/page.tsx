@@ -39,6 +39,7 @@ export function CreateLotForm() {
     const [isValidVolume, setIsValidVolume] = useState<boolean>(true);
     const [isValidCapacity, setIsValidCapacity] = useState<boolean>(true);    
     const isValidForm = !isValidVolume || !isValidCapacity;
+    const groupId = "google-5e6f7g8h"
 
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -49,8 +50,6 @@ export function CreateLotForm() {
             router.push("/admin");
         }
     }, [isLoading, isAuthenticated, router]);
-
-    const groupId = searchParams.get("groupId");
 
 
     const validateVolumeInput = (value: string) => {
@@ -123,7 +122,7 @@ export function CreateLotForm() {
         };
 
         try {
-            const response = await fetch(`http://localhost/api/v1/lot?groupId=${groupId}`, {
+            const response = await fetch(`https://lotlytics.nathanielmartes.com/api/v1/?groupId=${groupId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

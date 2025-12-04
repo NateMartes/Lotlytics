@@ -30,7 +30,7 @@ export default function Dashboard() {
     
     const getLotsForCurrentUser = () => {
         setSearching(true);
-        const url = "http://localhost/api/v1/lot"
+        const url = "https://lotlytics.nathanielmartes.com/api/v1/lot"
 
         fetch(url)
         .then((res: Response) => {
