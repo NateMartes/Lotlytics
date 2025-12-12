@@ -5,9 +5,5 @@ export default function CreateLotPageLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-        <AuthProvider>
-            {children}
-        </AuthProvider>
-  );
+  return <AuthProvider>{children}</AuthProvider>;
 }

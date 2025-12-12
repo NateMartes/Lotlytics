@@ -3,21 +3,15 @@ export interface Group {
   name: string;
 }
 
-export function createGroup(
-    id: number,
-    name: string, 
-    ): Group {
+export function createGroup(id: number, name: string): Group {
+  const group: Group = {
+    id: id,
+    name: name,
+  };
 
-    let group: Group = {
-        id: id,
-        name: name,
-    }
-
-    return group
+  return group;
 }
 
 export function createMockGroup(): Group {
-    return { id: 0,
-            name: "Unnamed group"
-        };
+  return { id: 0, name: "Unnamed group" };
 }

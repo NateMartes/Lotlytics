@@ -1,7 +1,15 @@
-"use client"
+"use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { AuthState, User } from '@/types/auth';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from "react";
+import { AuthState, User } from "@/types/auth";
+import { isLoggedIn } from "@/components/user-components";
 
 const initialAuthState: AuthState = {
   user: null,
@@ -10,12 +18,12 @@ const initialAuthState: AuthState = {
 };
 
 interface AuthContextTypeWithRefresh extends AuthState {
-    refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextTypeWithRefresh>({
-    ...initialAuthState,
-    refreshUser: () => Promise.resolve()
+  ...initialAuthState,
+  refreshUser: () => Promise.resolve(),
 });
 
 export const useAuth = () => {
@@ -30,25 +38,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>(initialAuthState);
 
   const fetchUser = useCallback(async () => {
-      setAuthState(prev => ({ ...prev, isLoading: true }));
-      try {
-        const response = await fetch("https://lotlytics-api.nathanielmartes.com/api/v1/user/me", {credentials: "include"});
+    setAuthState((prev) => ({ ...prev, isLoading: true }));
 
-        if (response.ok) {
-          const userData: User = await response.json();
+    return new Promise<void>((resolve) => {
+      isLoggedIn(
+        (u: User | null) => {
+          if (u == null) {
+            setAuthState({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+          } else {
+            setAuthState({ user: u, isAuthenticated: true, isLoading: false });
+          }
+          resolve();
+        },
+        (e: Error) => {
+          console.log(e.message);
           setAuthState({
-            user: userData,
-            isAuthenticated: true,
+            user: null,
+            isAuthenticated: false,
             isLoading: false,
           });
-
-        } else {
-          setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-        }
-      } catch (error) {
-        console.error("Failed to fetch user status:", error);
-        setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-      }
+          resolve();
+        },
+      );
+    });
   }, []);
 
   const refreshUser = useCallback(() => {

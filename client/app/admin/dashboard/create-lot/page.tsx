@@ -20,12 +20,7 @@ import { Dialog,
 from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { ButtonGroup, ButtonGroupSeparator } from "@/components/ui/button-group";
-
-class NotANumberError extends Error {
-    constructor(message: string) {
-        super(message);
-    }
-}
+import { postLot } from "@/components/lot-components";
 
 export function CreateLotForm() {
     const [name, setName] = useState<string>("");
@@ -57,17 +52,14 @@ export function CreateLotForm() {
             let valueInt = parseInt(value);
             if (isNaN(valueInt) || valueInt < 0) {
                 setIsValidVolume(false);
-                throw new NotANumberError("Volume must be a natural number");
-            }
-            setIsValidVolume(true);
-            setVolume(valueInt);
-            setFormErrorMessage(null);
-        } catch (error: any) {
-            if (error instanceof NotANumberError) {
-                setFormErrorMessage(error.message);
+                setFormErrorMessage("Volume must be a natural number");
             } else {
-                console.error(error.message);
+                setIsValidVolume(true);
+                setVolume(valueInt);
+                setFormErrorMessage(null);
             }
+        } catch (error: any) {
+                console.error(error.message);
         }
     };
 
@@ -76,25 +68,20 @@ export function CreateLotForm() {
             let valueInt = parseInt(value);
             if (isNaN(valueInt) || valueInt < 0) {
                 setIsValidCapacity(false);
-                throw new NotANumberError("Capacity must be a natural number.");
-            }
-            if (valueInt < 1) {
+                setFormErrorMessage("Capacity must be a natural number.");
+            } else if (valueInt < 1) {
                 setIsValidCapacity(false);
-                throw new NotANumberError("Capacity must be greater than 0.");
-            }
-            if (valueInt < volume) {
+                setFormErrorMessage("Capacity must be greater than 0.");
+            } else if (valueInt < volume) {
                 setIsValidCapacity(false);
-                throw new NotANumberError("Capacity must be greater than or equal to the volume.");
-            }
-            setIsValidCapacity(true);
-            setCapacity(valueInt);
-            setFormErrorMessage(null);
-        } catch (error: any) {
-            if (error instanceof NotANumberError) {
-                setFormErrorMessage(error.message);
+                setFormErrorMessage("Capacity must be greater than or equal to the volume.");
             } else {
-                console.error(error.message);
+                setIsValidCapacity(true);
+                setCapacity(valueInt);
+                setFormErrorMessage(null);
             }
+        } catch (error: any) {
+            console.error(error.message);
         }
     };
 
@@ -108,42 +95,23 @@ export function CreateLotForm() {
     const handleCreateLotSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (groupId === null) {
-            console.error("Group ID not present in url");
+            console.error("Group ID not present.");
             return
         }
-        const payload = {
-            name,
-            capacity,
-            volume,
-            street,
-            city,
-            state,
-            zip
-        };
-
-        try {
-            const response = await fetch(`https://lotlytics-api.nathanielmartes.com/api/v1/lot?groupId=${groupId}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                console.error("Error creating lot:", error);
-                return;
-            } else {
-                let dialog: HTMLElement| null = document.getElementById("lotCreatedDialog");
-                if (dialog) {
-                    dialog.click();
-                }
-            }
-
-        } catch (err) {
-            console.error("Network error:", err);
+        if (street == null || city == null || state == null || zip == null) {
+            console.error("Address not filled");
+            return
         }
+        postLot(groupId, name, capacity, volume, street, city, state, zip, () => {
+            let dialog: HTMLElement| null = document.getElementById("lotCreatedDialog");
+            if (dialog) {
+                dialog.click();
+            }
+        },
+        (e: Error) => {
+            console.log(e.message);
+        });
+
     };
 
     const routeHome = (e: FormEvent) => {
@@ -268,11 +236,11 @@ export function CreateLotForm() {
                             </DialogHeader>
                             <DialogFooter>
                                 <ButtonGroup>
-                                    <Button size="sm" className="bg-blue-950 text-white hover:bg-blue-500">
+                                    <Button size="sm" variant="outline" className="bg-blue-950 text-white hover:bg-blue-500">
                                         <DialogClose>Close</DialogClose>
                                     </Button>
                                     <ButtonGroupSeparator/>
-                                    <Button size="sm" className="bg-blue-950 text-white hover:bg-blue-500" onClick={routeHome}>Home</Button>
+                                    <Button size="sm" variant="outline" className="bg-blue-950 text-white hover:bg-blue-500" onClick={routeHome}>Home</Button>
                                 </ButtonGroup>
                             </DialogFooter>
                     </DialogContent>
