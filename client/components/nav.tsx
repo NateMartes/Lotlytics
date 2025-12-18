@@ -60,17 +60,18 @@ export function Navigation({ isMain = true, hasIcon = true }: NavProps) {
 
   return (
     <nav
-      className={`flex sticky max-h-20 top-0 text-md md:text-2xl text-white p-5 justify-between w-full bg-blue-950 ${isMainClass} z-1002`}
+      className={`flex place-items-center sticky max-h-20 top-0 text-md md:text-2xl text-white p-5 justify-between w-full bg-blue-950 ${isMainClass} z-1002`}
     >
       {hasIcon ? (
         <div>
-          <Link href="/">
+          <Link href="/" className="flex place-items-center gap-2 rounded-lg transition-all">
             <Image
               src="/Lotlytics.avif"
               alt="Lotlytics"
-              width="60"
-              height="60"
+              width="80"
+              height="80"
             />
+            <span className="md:inline hidden">Lotlytics</span>
           </Link>
         </div>
       ) : (
