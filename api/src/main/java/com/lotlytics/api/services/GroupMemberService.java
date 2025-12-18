@@ -171,7 +171,7 @@ public class GroupMemberService {
     * @param username The username of the user
     * @return A list of group member links
     */
-    public List<Group> getGroupsForUser(String username) throws NotFoundException {
+    public List<GroupMember> getGroupsForUser(String username) throws NotFoundException {
         if (!userService.isAUserByUsername(username)) {
             throw new NotFoundException("User '" + username +"' does not exist");
         }
