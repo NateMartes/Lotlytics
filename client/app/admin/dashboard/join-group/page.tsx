@@ -6,19 +6,23 @@ import { Navigation } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import {
   getAllGroups,
+  getAllUserGroups,
   GroupList,
   GroupListHandle,
+  UserGroupListHandle,
 } from "@/components/group-components";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function JoinGroupPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [searching, setSearching] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState<string>("");
   const groupListHandle = useRef<GroupListHandle>(null);
+  const userGroupListHandle = useRef<UserGroupListHandle>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,9 +31,17 @@ export default function JoinGroupPage() {
     } else {
       getAllGroups(
         groupListHandle,
-        () => setSearching(false),
+        () => {},
         (error: Error) => console.error(error.message),
       );
+      if (user != null) { 
+        getAllUserGroups(
+          user.username,
+          userGroupListHandle,
+          () => setSearching(false),
+          (error: Error) => console.error(error.message),
+        );
+      }
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -48,18 +60,21 @@ export default function JoinGroupPage() {
   return (
     <>
       <Navigation />
-      <div className="w-full p-4 flex flex-col place-items-center">
-        <p className="text-left text-2xl lg:text-3xl w-110 md:w-125 mb-4">
-          Join a Group
-        </p>
-        <p className="text-left text-lg w-110 md:w-125">
-          {"Can't find a group?"}
-          <a className="hover:underline" href="/admin/dashboard/create-group">
-            Create one!
-          </a>
-        </p>
+      <div className="w-full flex justify-center">
+        <div className="text-left p-4 flex flex-col">
+          <h1 className="text-2xl lg:text-3xl md:w-125 mb-4">Join a Group</h1>
+          <p className="text-lg">
+            {"Can't find a group? "}
+            <Link
+              className="hover:underline"
+              href="/admin/dashboard/create-group"
+            >
+              Create one!
+            </Link>
+          </p>
+        </div>
       </div>
-      <div className="w-full max-w-6xl flex flex-col gap-6 p-5 place-items-center">
+      <div className="w-full flex flex-col place-items-center p-4">
         <Card className="w-full max-w-md md:max-w-lg">
           <form
             className="flex p-4 justify-center gap-4"
@@ -85,7 +100,7 @@ export default function JoinGroupPage() {
           <span className="text-red-600">{errorMessage}</span>
         </div>
       ) : null}
-      <GroupList ref={groupListHandle} hasSearched={searching} />
+      <GroupList ref={groupListHandle} userGroups={userGroupListHandle} searching={searching} username={user?.username || ""}/>
       <Footer />
     </>
   );

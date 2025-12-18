@@ -1,9 +1,16 @@
 export interface Group {
-  id: number;
+  id: string;
   name: string;
 }
 
-export function createGroup(id: number, name: string): Group {
+export interface GroupMemberLink {
+  id: number;
+  groupId: string;
+  userId: number;
+  roleId: number;
+}
+
+export function createGroup(id: string, name: string): Group {
   const group: Group = {
     id: id,
     name: name,
@@ -13,5 +20,5 @@ export function createGroup(id: number, name: string): Group {
 }
 
 export function createMockGroup(): Group {
-  return { id: 0, name: "Unnamed group" };
+  return { id: "mygroup-abc123", name: "Unnamed group" };
 }

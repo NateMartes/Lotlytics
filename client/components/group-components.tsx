@@ -1,14 +1,20 @@
-import { Group } from "@/types/group";
+import { Group, GroupMemberLink } from "@/types/group";
 import {
   RefObject,
   ForwardedRef,
   forwardRef,
   useImperativeHandle,
   useState,
+  useMemo
 } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
-import { ButtonGroup, ButtonGroupSeparator } from "./ui/button-group";
-import { Button } from "./ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { ButtonGroup, ButtonGroupSeparator } from "@/components/ui/button-group";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { API_URL } from "@/types/url";
 
 export type GroupListHandle = {
@@ -16,9 +22,21 @@ export type GroupListHandle = {
   clearGroups: () => void;
 };
 
+export type UserGroupListHandle = {
+  setUserGroupList: (groups: GroupMemberLink[]) => void;
+  clearGroups: () => void;
+};
+
+/**
+ * The getAllGroups functions gets all groups known in the backend.
+ * 
+ * @param groupListRef A group list to place all of the found groups.
+ * @param callback A fucntion to run when the groups are gathered.
+ * @param errorCallback A function to run when an error occurs getting groups.
+ */
 export function getAllGroups(
   groupListRef: RefObject<GroupListHandle | null>,
-  callback: () => void,
+  callback: (g: Group[]) => void,
   errorCallback: (error: Error) => void,
 ) {
   const url = API_URL + "/group";
@@ -29,49 +47,111 @@ export function getAllGroups(
       if (!res.ok) {
         throw new Error(`Failed to get groups, status: ${res.status}`);
       } else {
-        const body = await res.json();
+        const body: Group[] = await res.json();
         groupListRef?.current?.setGroupList(body);
-        callback();
+        callback(body);
       }
     })
     .catch((error: Error) => {
       errorCallback(error);
     });
 }
+
+/**
+ * The addUserToGroup functinon gets all groups a user belongs to.
+ * @param username The username of the user.
+ * @param callback A function to call when the user is added to the group.
+ * @param errorCallback A function to call when an error occurs adding the user to a group.
+ */
+export function getAllUserGroups(
+  username: string,
+  groupListRef: RefObject<UserGroupListHandle | null>,
+  callback: (g: GroupMemberLink[]) => void,
+  errorCallback: (error: Error) => void,
+) {
+  const url = API_URL + "/group/member?username=" + username;
+  fetch(url, {
+    method: "GET",
+    credentials: "include",
+  })
+    .then(async (res: Response) => {
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(`Failed to add user to group, status: ${JSON.stringify(body)}`);
+      } else {
+        const body: GroupMemberLink[] = await res.json();
+        groupListRef?.current?.setUserGroupList(body);
+        callback(body);
+      }
+    })
+    .catch((error: Error) => {
+      errorCallback(error);
+    });
+}
+
 interface GroupListProps {
-  hasSearched: boolean;
+  searching: boolean;
+  username: string;
+  userGroups?: RefObject<UserGroupListHandle | null>
 }
 
 function capitalizeFirstLetter(val: string) {
   return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
-function getGroupComponent(group: Group) {
+function handleJoinGroup(name: string, username: string, isUserGroup: boolean) {
+}
+
+function getGroupComponent(group: Group, username: string, isUserGroup: boolean) {
   return (
-    <Card className="w-75 md:w-100 p-3" key={group.id}>
+    <Card className="w-75 p-3 flex flex-col" key={group.id}>
       <CardHeader className="text-xl">
         {capitalizeFirstLetter(group.name)}
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <p className="text-sm text-muted-foreground font-medium">
           ID: {group.id}
         </p>
+        {isUserGroup ?
+          <div className="h-10 mt-2">
+            <p className="text-sm text-red-500 font-medium">
+              You are already a member of this group.
+            </p>
+          </div>
+        : null}
       </CardContent>
       <CardFooter>
         <ButtonGroup>
-          <Button
-            size="sm"
-            className="bg-blue-950 text-white hover:bg-green-500"
-          >
-            Join
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                className="bg-blue-950 text-white hover:bg-green-500"
+                onClick={() => handleJoinGroup(group.name, username, isUserGroup)}
+                title={isUserGroup === true ? "You are already a member of this group" : `Join the ${group.name} group`}
+                disabled={isUserGroup}
+              >
+                Join
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{`Join ${group.name}'s group`}</p>
+            </TooltipContent>
+          </Tooltip>
           <ButtonGroupSeparator />
-          <Button
-            size="sm"
-            className="bg-blue-950 text-white hover:bg-blue-500"
-          >
-            View Lots
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                className="bg-blue-950 text-white hover:bg-blue-500"
+              >
+                View Lots
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{`View ${group.name}'s parking lots`}</p>
+            </TooltipContent>
+          </Tooltip>
         </ButtonGroup>
       </CardFooter>
     </Card>
@@ -79,13 +159,18 @@ function getGroupComponent(group: Group) {
 }
 
 function GroupListComponent(
-  { hasSearched }: GroupListProps,
-  ref: ForwardedRef<GroupListHandle>,
+  { searching, username, userGroups}: GroupListProps,
+  groups: ForwardedRef<GroupListHandle>,
 ) {
+  
   const [groupList, setGroupList] = useState<Group[]>([]);
-
+  const [userGroupList, setUserGroupList] = useState<GroupMemberLink[]>([]);
+  const userGroupIds = useMemo(() => {
+    return new Set(userGroupList.map((g: GroupMemberLink) => g.groupId));
+  }, [userGroupList]);
+  
   useImperativeHandle(
-    ref,
+    groups,
     () => ({
       setGroupList: (incomingGroups: Group[]) => {
         setGroupList(incomingGroups ?? []);
@@ -96,11 +181,26 @@ function GroupListComponent(
     }),
     [],
   );
-
+  
+  useImperativeHandle(
+    userGroups,
+    () => ({
+      setUserGroupList: (incomingGroups: GroupMemberLink[]) => {
+        setUserGroupList(incomingGroups ?? []);
+      },
+      clearGroups: () => {
+        setUserGroupList([]);
+      },
+    }),
+    [],
+  );
+    
   return (
-    <div className="w-full max-w-6xl flex flex-col gap-6 p-5 place-items-center">
-      {groupList.map((group) => getGroupComponent(group))}
-      {!hasSearched && groupList.length == 0 ? (
+    <div className="w-screen flex flex-col gap-6 p-5 place-items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+        {groupList.map((group: Group) => getGroupComponent(group, username, userGroupIds.has(group.id)))}
+      </div>
+      {!searching && groupList.length == 0 ? (
         <p className="text-center text-base text-muted-foreground">
           No parking groups just yet...
         </p>

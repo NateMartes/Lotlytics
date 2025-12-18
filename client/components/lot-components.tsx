@@ -88,7 +88,7 @@ export function postLot(
  */
 export function getAllLots(
   lotListRef: RefObject<LotListHandle | null>,
-  callback: () => void,
+  callback: (l: Lot[]) => void,
   errorCallback: (e: Error) => void,
 ) {
   const url = API_BASE_PATH + "lot";
@@ -117,11 +117,11 @@ export function getAllLots(
       );
       lotListRef?.current?.setLots(lots);
       lotListRef?.current?.setFilter("all");
+      callback(lots);
     })
     .catch((error: Error) => {
       errorCallback(error);
     })
-    .finally(callback);
 }
 
 interface LotItemProps {

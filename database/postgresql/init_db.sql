@@ -87,5 +87,11 @@ INSERT INTO lots (group_id, capacity, current_volume, name, street, city, state,
 ('jerseytest-4df31ws1', 70, 30, 'Newark Liberty International Airport', 'Newark Liberty International Airport', 'Newark', 'NJ', '07114');
 
 
-INSERT INTO users (id, username, email, password) VALUES
-(1, 'cosmic', 'myemail@gmail.com', '$2a$15$QhBrq.LVq8tchg5kPajnTejHPxEzUDHWcfSDxULez.Pl0NI8KiKNa');
+INSERT INTO users (username, email, password) VALUES
+('cosmic', 'myemail@gmail.com', '$2a$15$QhBrq.LVq8tchg5kPajnTejHPxEzUDHWcfSDxULez.Pl0NI8KiKNa');
+
+INSERT INTO roles (name) VALUES
+('ADMIN');
+
+INSERT INTO group_members (group_id, user_id, role_id) VALUES
+('wilkes-1a2b3c4d', 1, 1);

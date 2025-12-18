@@ -53,6 +53,18 @@ public class GroupMemberController extends GenericController {
     }
     
     /**
+     * The getGroupMembers method handles the /api/v1/group/member?groupId=someVal endpoint.
+     * 
+     * @param groupId The ID of the group
+     * @return A list of all members in the specified group
+     */
+    @GetMapping(params = "username")
+    public ResponseEntity<?> getGroupsForUser(@RequestParam String username) {
+        log.info(String.format(endpointMsg, "GET", "?username=" + username));
+        return callServiceMethod(() -> groupMemberService.getGroupsForUser(username), HttpStatus.OK);
+    }
+    
+    /**
      * The createGroupMember method handles the /api/v1/group/member?groupId=someVal endpoint.
      * This method creates a new group member using the GroupMemberService.
      * 

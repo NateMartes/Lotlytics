@@ -13,6 +13,7 @@ import com.lotlytics.api.repositories.GroupMemberRepository;
 import com.lotlytics.api.repositories.GroupRepository;
 import com.lotlytics.api.repositories.RoleRepository;
 import com.lotlytics.api.repositories.UserRepository;
+import com.lotlytics.api.entites.user.User;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,7 +25,7 @@ public class GroupMemberService {
     
     GroupMemberRepository groupMemberRepository;
     GroupRepository groupRepository;
-    UserRepository userRepository;
+    UserService userService;
     RoleRepository roleRepository;
     
     /**
@@ -39,11 +40,12 @@ public class GroupMemberService {
             GroupMemberRepository groupMemberRepository,
             GroupRepository groupRepository,
             UserRepository userRepository,
-            RoleRepository roleRepository) {
+            RoleRepository roleRepository,
+            UserService userService) {
         this.groupMemberRepository = groupMemberRepository;
         this.groupRepository = groupRepository;
-        this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.userService = userService;
     }
     
     /**
@@ -66,7 +68,7 @@ public class GroupMemberService {
         }
         
         // Check if user exists
-        if (!userRepository.existsById(userId)) {
+        if (!userService.isAUser(userId)) {
             throw new NotFoundException("User with ID '" + userId + "' does not exist");
         }
         
@@ -105,7 +107,7 @@ public class GroupMemberService {
         }
         
         // Check if user exists
-        if (!userRepository.existsById(userId)) {
+        if (!userService.isAUser(userId)) {
             throw new NotFoundException("User with ID '" + userId + "' does not exist");
         }
         
@@ -165,6 +167,22 @@ public class GroupMemberService {
     }
     
     /**
+    * The getGroupsForUser method gets all groups that a user belongs to.
+    * @param username The username of the user
+    * @return A list of group member links
+    */
+    public List<Group> getGroupsForUser(String username) throws NotFoundException {
+        if (!userService.isAUserByUsername(username)) {
+            throw new NotFoundException("User '" + username +"' does not exist");
+        }
+        
+        Integer userId = userService.getUserByUsername(username).getId();
+        GroupMember groupMemberExample = new GroupMember();
+        groupMemberExample.setUserId(userId);
+        List<GroupMember> out = groupMemberRepository.findAll(Example.of(groupMemberExample));
+        return out;
+    }
+    /**
      * The deleteGroupMember method removes a user from a group.
      * 
      * @param groupId the ID of the group
@@ -178,7 +196,7 @@ public class GroupMemberService {
         }
         
         // Check if user exists
-        if (!userRepository.existsById(userId)) {
+        if (!userService.isAUser(userId)) {
             throw new NotFoundException("User with ID '" + userId + "' does not exist");
         }
         
