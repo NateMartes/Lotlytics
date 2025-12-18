@@ -15,6 +15,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
+  DropdownMenuContent,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu"
+
 import { API_URL } from "@/types/url";
 
 export type GroupListHandle = {
@@ -95,11 +105,16 @@ interface GroupListProps {
   userGroups?: RefObject<UserGroupListHandle | null>
 }
 
+interface userGroupsDropDownProps {
+  searching: boolean;
+  onSelect: (groupId: string) => void;
+}
+
 function capitalizeFirstLetter(val: string) {
   return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
-function handleJoinGroup(name: string, username: string, isUserGroup: boolean) {
+function handleJoinGroup(group: Group, username: string) {
 }
 
 function getGroupComponent(group: Group, username: string, isUserGroup: boolean) {
@@ -127,7 +142,7 @@ function getGroupComponent(group: Group, username: string, isUserGroup: boolean)
               <Button
                 size="sm"
                 className="bg-blue-950 text-white hover:bg-green-500"
-                onClick={() => handleJoinGroup(group.name, username, isUserGroup)}
+                onClick={() => handleJoinGroup(group, username)}
                 title={isUserGroup === true ? "You are already a member of this group" : `Join the ${group.name} group`}
                 disabled={isUserGroup}
               >
@@ -212,3 +227,52 @@ function GroupListComponent(
 export const GroupList = forwardRef<GroupListHandle, GroupListProps>(
   GroupListComponent,
 );
+
+function getUserGroupDropDownComponent(groupId: string, onSelect: (groupId: string) => void) {
+  return (
+    <DropdownMenuItem key={groupId} onClick={() => onSelect(groupId)}>
+      {groupId}
+    </DropdownMenuItem>
+  );
+}
+
+function UserGroupDropDownComponent(
+    { searching,  onSelect }: userGroupsDropDownProps,
+    userGroups: ForwardedRef<UserGroupListHandle>,
+  ) {
+    
+  const [userGroupList, setUserGroupList] = useState<GroupMemberLink[]>([]);
+    
+  useImperativeHandle(
+    userGroups,
+    () => ({
+      setUserGroupList: (incomingGroups: GroupMemberLink[]) => {
+        setUserGroupList(incomingGroups ?? []);
+      },
+      clearGroups: () => {
+        setUserGroupList([]);
+      },
+    }),
+    [],
+  );
+    
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button className="bg-blue-950 text-white hover:bg-blue-500">Select a Group</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuLabel>Your Groups</DropdownMenuLabel>
+        <DropdownMenuSeparator/>
+        <DropdownMenuGroup>
+          {userGroupList.map((groupMemberLink: GroupMemberLink) => getUserGroupDropDownComponent(groupMemberLink.groupId, onSelect))}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export const UserGroupDropDown = forwardRef<UserGroupListHandle, userGroupsDropDownProps>(
+  UserGroupDropDownComponent,
+);
+

@@ -94,4 +94,5 @@ INSERT INTO roles (name) VALUES
 ('ADMIN');
 
 INSERT INTO group_members (group_id, user_id, role_id) VALUES
-('wilkes-1a2b3c4d', 1, 1);
+('wilkes-1a2b3c4d', 1, 1),
+('google-5e6f7g8h', 1, 1);

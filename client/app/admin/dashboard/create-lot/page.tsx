@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { ChangeEvent, useState, useEffect, FormEvent } from "react";
+import { ChangeEvent, useState, useEffect, FormEvent, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MapComponent } from "@/components/open-source-map";
@@ -26,6 +26,7 @@ import {
   ButtonGroupSeparator,
 } from "@/components/ui/button-group";
 import { postLot } from "@/components/lot-components";
+import { UserGroupListHandle, UserGroupDropDown, getAllUserGroups } from "@/components/group-components";
 
 export function CreateLotForm() {
   const [name, setName] = useState<string>("");
@@ -38,16 +39,27 @@ export function CreateLotForm() {
   const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
   const [isValidVolume, setIsValidVolume] = useState<boolean>(true);
   const [isValidCapacity, setIsValidCapacity] = useState<boolean>(true);
+  const [groupId, setGroupId] = useState<string | null>(null);
+  const [searching, setSearching] = useState<boolean>(false);
+  const userGroupDropDownHandle = useRef<UserGroupListHandle>(null);
   const isValidForm = !isValidVolume || !isValidCapacity;
-  const groupId = "google-5e6f7g8h";
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/admin");
+    } else {
+      if (user != null) {
+        getAllUserGroups(
+          user.username,
+          userGroupDropDownHandle,
+          () => setSearching(false),
+          (error: Error) => setFormErrorMessage(`Failed to gather user groups: ${error.message}`)
+        )
+      }
     }
   }, [isLoading, isAuthenticated, router]);
 
@@ -161,10 +173,30 @@ export function CreateLotForm() {
                 />
               </div>
               <div className="flex flex-col gap-2">
+                <label htmlFor="groupId" className="text-sm font-medium">
+                  Group
+                </label>
+                <div className="flex gap-2 place-items-center">
+                  <Input
+                    id="groupId"
+                    required
+                    placeholder="Enter the group this lot belongs to"
+                    type="text"
+                    disabled={true}
+                    value={groupId ? groupId : ""}
+                  />
+                  <UserGroupDropDown ref={userGroupDropDownHandle} 
+                  searching={searching}
+                  onSelect={(groupId: string) => setGroupId(groupId)}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
                 <label htmlFor="lotVolume" className="text-sm font-medium">
                   Current Volume
                 </label>
                 <Input
+                  className="disabled:opacity-100"
                   id="lotVolume"
                   required
                   placeholder="Enter your lot's current volume"
@@ -245,7 +277,7 @@ export function CreateLotForm() {
             </div>
           </div>
           {isValidForm && formErrorMessage ? (
-            <div className="mt-2 mb-2">
+            <div className="mt-2 mb-2 max-w-100">
               <span className="text-red-600">{formErrorMessage}</span>
             </div>
           ) : null}

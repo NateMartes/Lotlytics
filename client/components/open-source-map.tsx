@@ -179,7 +179,7 @@ export function MapComponent({ onAddress }: MapProps) {
           </div>
           <Button
             type="button"
-            className="bg-blue-900 hover:bg-blue-400"
+            className="bg-blue-950 text-white hover:bg-blue-500"
             onClick={handleSearch}
             disabled={isLoading}
           >
