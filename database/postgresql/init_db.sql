@@ -91,7 +91,7 @@ INSERT INTO users (username, email, password) VALUES
 ('cosmic', 'myemail@gmail.com', '$2a$15$QhBrq.LVq8tchg5kPajnTejHPxEzUDHWcfSDxULez.Pl0NI8KiKNa');
 
 INSERT INTO roles (name) VALUES
-('ADMIN');
+('MEMBER');
 
 INSERT INTO group_members (group_id, user_id, role_id) VALUES
 ('wilkes-1a2b3c4d', 1, 1),

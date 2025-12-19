@@ -70,6 +70,7 @@ export function Navigation({ isMain = true, hasIcon = true }: NavProps) {
               alt="Lotlytics"
               width="80"
               height="80"
+              loading="eager"
             />
             <span className="md:inline hidden">Lotlytics</span>
           </Link>

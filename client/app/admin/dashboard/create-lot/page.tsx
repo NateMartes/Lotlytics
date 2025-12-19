@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MapComponent } from "@/components/open-source-map";
 import { Address } from "@/types/address";
-import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Navigation } from "@/components/nav";
@@ -44,7 +43,6 @@ export function CreateLotForm() {
   const userGroupDropDownHandle = useRef<UserGroupListHandle>(null);
   const isValidForm = !isValidVolume || !isValidCapacity;
 
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isLoading, isAuthenticated } = useAuth();
 
@@ -61,7 +59,7 @@ export function CreateLotForm() {
         )
       }
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, user]);
 
   const validateVolumeInput = (value: string) => {
     try {
@@ -74,8 +72,10 @@ export function CreateLotForm() {
         setVolume(valueInt);
         setFormErrorMessage(null);
       }
-    } catch (error: any) {
-      console.error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
     }
   };
 
@@ -98,8 +98,10 @@ export function CreateLotForm() {
         setCapacity(valueInt);
         setFormErrorMessage(null);
       }
-    } catch (error: any) {
-      console.error(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
     }
   };
 
@@ -305,13 +307,15 @@ export function CreateLotForm() {
             </DialogHeader>
             <DialogFooter>
               <ButtonGroup>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="bg-blue-950 text-white hover:bg-blue-500"
-                >
-                  <DialogClose>Close</DialogClose>
-                </Button>
+                <DialogClose asChild>
+                 <Button
+                   size="sm"
+                   variant="outline"
+                   className="bg-blue-950 text-white hover:bg-blue-500"
+                 >
+                   Close
+                 </Button>
+                </DialogClose>
                 <ButtonGroupSeparator />
                 <Button
                   size="sm"

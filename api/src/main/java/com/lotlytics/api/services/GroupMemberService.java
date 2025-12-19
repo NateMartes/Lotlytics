@@ -13,9 +13,11 @@ import com.lotlytics.api.repositories.GroupMemberRepository;
 import com.lotlytics.api.repositories.GroupRepository;
 import com.lotlytics.api.repositories.RoleRepository;
 import com.lotlytics.api.repositories.UserRepository;
-import com.lotlytics.api.entites.user.User;
+import com.lotlytics.api.entites.role.Role;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.RuntimeException;
+import java.util.Optional;
 /**
  * The GroupMemberService class defines service methods for managing group members.
  */
@@ -60,7 +62,6 @@ public class GroupMemberService {
      */
     public GroupMember createGroupMember(String groupId, CreateGroupMemberPayload payload) {
         Integer userId = payload.getUserId();
-        Integer roleId = payload.getRoleId();
         
         // Check if group exists
         if (!groupRepository.existsById(groupId)) {
@@ -72,19 +73,21 @@ public class GroupMemberService {
             throw new NotFoundException("User with ID '" + userId + "' does not exist");
         }
         
-        // Check if role exists
-        if (!roleRepository.existsById(roleId)) {
-            throw new NotFoundException("Role with ID '" + roleId + "' does not exist");
-        }
-        
         // Check if user is already a member of the group
         if (isGroupMember(groupId, userId)) {
             throw new ConflictException("User with ID '" + userId + "' is already a member of group '" + groupId + "'");
         }
         
-        GroupMember groupMember = new GroupMember(groupId, userId, roleId);
+        // Check a role exists to make the user
+        Role defaultRole = new Role("MEMBER");
+        Optional<Role> role = roleRepository.findOne(Example.of(defaultRole));
+        if (role.isEmpty()) {
+            throw new RuntimeException("No roles to give the user. The default role should be MEMBER");
+        }
+        
+        GroupMember groupMember = new GroupMember(groupId, userId, role.get().getId());
         GroupMember out = groupMemberRepository.save(groupMember);
-        log.info("Added user '" + userId + "' to group '" + groupId + "' with role '" + roleId + "'");
+        log.info("Added user '" + userId + "' to group '" + groupId + "' with role '" + role.get().getId() + "'");
         return out;
     }
     

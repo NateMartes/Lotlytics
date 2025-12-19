@@ -87,7 +87,7 @@ export function getAllUserGroups(
     .then(async (res: Response) => {
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(`Failed to add user to group, status: ${JSON.stringify(body)}`);
+        throw new Error(`Failed to get user groups, status: ${JSON.stringify(body)}`);
       } else {
         const body: GroupMemberLink[] = await res.json();
         groupListRef?.current?.setUserGroupList(body);
@@ -99,10 +99,51 @@ export function getAllUserGroups(
     });
 }
 
+/**
+ * The postGroupMemeber function adds a user to a group.
+ * 
+ * @param groupId The group to add the user to.
+ * @param userId The user to add to the group.
+ * @param callback A function to call when the user is successfully added to the group.
+ * @param errorCallback A function to call when an error occurs while adding a user to a group.
+ */
+ export function postGroupMemeber(
+   groupId: string, 
+   userId: number, 
+   callback: () => void, 
+   errorCallback: (e: Error) => void
+ ) {
+  const url = API_URL + `/group/member?groupId=${groupId}`;
+  const payload = {
+     userId: userId,
+  };
+  
+  fetch(url, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+    .then(async (res: Response) => {
+      if (!res.ok) {
+        const body = await res.json();
+        throw new Error(`Failed to add user to group, status: ${JSON.stringify(body)}`);
+      } else {
+        callback();
+      }
+    })
+    .catch((error: Error) => {
+      errorCallback(error);
+    });
+}
+
 interface GroupListProps {
   searching: boolean;
   username: string;
   userGroups?: RefObject<UserGroupListHandle | null>
+  onJoin: (groupName: string) => void | undefined
 }
 
 interface userGroupsDropDownProps {
@@ -114,10 +155,31 @@ function capitalizeFirstLetter(val: string) {
   return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
 
-function handleJoinGroup(group: Group, username: string) {
+function handleJoinGroup(
+  group: Group, 
+  userId: number | undefined,
+  onJoin: (groupName: string) => void | undefined
+) {
+  if (userId === undefined) {
+    return;
+  }
+  
+  postGroupMemeber(group.id, userId,
+    () => {
+      if (onJoin != undefined) {
+        onJoin(group.name);
+      }
+    },
+    (e: Error) => console.error(e.message)
+  );
 }
 
-function getGroupComponent(group: Group, username: string, isUserGroup: boolean) {
+function getGroupComponent(
+  group: Group, 
+  userId: number | undefined, 
+  isUserGroup: boolean, 
+  onJoin: (groupName: string) => void | undefined
+) {
   return (
     <Card className="w-75 p-3 flex flex-col" key={group.id}>
       <CardHeader className="text-xl">
@@ -142,7 +204,7 @@ function getGroupComponent(group: Group, username: string, isUserGroup: boolean)
               <Button
                 size="sm"
                 className="bg-blue-950 text-white hover:bg-green-500"
-                onClick={() => handleJoinGroup(group, username)}
+                onClick={() => handleJoinGroup(group, userId, onJoin)}
                 title={isUserGroup === true ? "You are already a member of this group" : `Join the ${group.name} group`}
                 disabled={isUserGroup}
               >
@@ -174,7 +236,7 @@ function getGroupComponent(group: Group, username: string, isUserGroup: boolean)
 }
 
 function GroupListComponent(
-  { searching, username, userGroups}: GroupListProps,
+  { searching, userGroups, onJoin }: GroupListProps,
   groups: ForwardedRef<GroupListHandle>,
 ) {
   
@@ -182,6 +244,11 @@ function GroupListComponent(
   const [userGroupList, setUserGroupList] = useState<GroupMemberLink[]>([]);
   const userGroupIds = useMemo(() => {
     return new Set(userGroupList.map((g: GroupMemberLink) => g.groupId));
+  }, [userGroupList]);
+  const userId = useMemo(() => {
+    if (userGroupList.length > 0) {
+      return userGroupList[0].userId;
+    }
   }, [userGroupList]);
   
   useImperativeHandle(
@@ -209,11 +276,11 @@ function GroupListComponent(
     }),
     [],
   );
-    
+  
   return (
     <div className="w-screen flex flex-col gap-6 p-5 place-items-center">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-        {groupList.map((group: Group) => getGroupComponent(group, username, userGroupIds.has(group.id)))}
+        {groupList.map((group: Group) => getGroupComponent(group, userId, userGroupIds.has(group.id), onJoin))}
       </div>
       {!searching && groupList.length == 0 ? (
         <p className="text-center text-base text-muted-foreground">
@@ -237,7 +304,7 @@ function getUserGroupDropDownComponent(groupId: string, onSelect: (groupId: stri
 }
 
 function UserGroupDropDownComponent(
-    { searching,  onSelect }: userGroupsDropDownProps,
+    { onSelect }: userGroupsDropDownProps,
     userGroups: ForwardedRef<UserGroupListHandle>,
   ) {
     

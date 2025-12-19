@@ -11,9 +11,20 @@ import {
   GroupListHandle,
   UserGroupListHandle,
 } from "@/components/group-components";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTrigger,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup, ButtonGroupSeparator } from "@/components/ui/button-group"
 import Link from "next/link";
 
 export default function JoinGroupPage() {
@@ -21,6 +32,7 @@ export default function JoinGroupPage() {
   const [searching, setSearching] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState<string>("");
+  const [dialogSuccessMessage, setDialogSuccessMessage] = useState<string>("You have joined a new group.");
   const groupListHandle = useRef<GroupListHandle>(null);
   const userGroupListHandle = useRef<UserGroupListHandle>(null);
   const router = useRouter();
@@ -43,7 +55,7 @@ export default function JoinGroupPage() {
         );
       }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, user]);
 
   const handleSearchSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -100,7 +112,52 @@ export default function JoinGroupPage() {
           <span className="text-red-600">{errorMessage}</span>
         </div>
       ) : null}
-      <GroupList ref={groupListHandle} userGroups={userGroupListHandle} searching={searching} username={user?.username || ""}/>
+      <GroupList 
+        ref={groupListHandle} 
+        userGroups={userGroupListHandle} 
+        searching={searching} 
+        username={user?.username || ""} 
+        onJoin={(groupName: string) => {
+          setDialogSuccessMessage(`You have joined the ${groupName} group.`); 
+          const dialog: HTMLElement | null = document.getElementById("joinGroupDialog");
+          dialog?.click();
+      }}/>
+        <Dialog>
+          <DialogTrigger
+            className="hidden"
+            id="joinGroupDialog"
+          ></DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Added to Group!</DialogTitle>
+              <DialogDescription id="joinGroupDialogDescription">
+               {dialogSuccessMessage}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <ButtonGroup>
+                 <DialogClose asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-blue-950 text-white hover:bg-blue-500"
+                  >
+                    Close
+                  </Button>
+                 </DialogClose>
+                <ButtonGroupSeparator />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-blue-950 text-white hover:bg-blue-500"
+                  onClick={() => router.push("/")}
+                >
+                  Home
+                </Button>
+              </ButtonGroup>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       <Footer />
     </>
   );
