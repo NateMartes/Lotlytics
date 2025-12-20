@@ -58,7 +58,7 @@ export function postLot(
   callback: (response: JSON) => void,
   errorCallback: (e: Error) => void,
 ) {
-  const url = API_URL + `lot?groupId=${groupId}`;
+  const url = API_URL + `/lot?groupId=${groupId}`;
   const payload = {
     name: name,
     capacity: capacity,
@@ -98,7 +98,7 @@ export function getAllLots(
   callback: (l: Lot[]) => void,
   errorCallback: (e: Error) => void,
 ) {
-  const url = API_URL + "lot";
+  const url = API_URL + "/lot";
   fetch(url)
     .then((res: Response) => {
       if (!res.ok) {
