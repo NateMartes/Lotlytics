@@ -22,14 +22,12 @@ import {
 import {
   Dialog,
   DialogTitle,
-  DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Image from "next/image";
+import Link from "next/link";
 import { Map } from "@/components/google-map-components";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
@@ -144,29 +142,46 @@ interface LotItemInDialogProps {
 }
 
 function getLotMapLinks(lot: Lot) {
+  // Construct the address string and encode it for URL safety
+  const address = `${lot.street}, ${lot.city}, ${lot.state} ${lot.zip}`;
+  const encodedAddress = encodeURIComponent(address);
+
+  // Define URL schemes
+  const appleMapsUrl = `https://maps.apple.com/?q=${encodedAddress}`;
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  const wazeUrl = `https://waze.com/ul?q=${encodedAddress}`;
+
   return (
     <div className="flex gap-4">
-      <Image
-        width="48"
-        height="48"
-        className="cursor-pointer"
-        src="/apple.avif"
-        alt="Apple Maps"
-      />
-      <Image
-        width="48"
-        height="48"
-        className="cursor-pointer"
-        src="/google.avif"
-        alt="Google Maps"
-      />
-      <Image
-        width="48"
-        height="48"
-        className="cursor-pointer"
-        src="/waze.avif"
-        alt="Waze"
-      />
+      <Link href={appleMapsUrl} target="_blank" rel="noopener noreferrer">
+        <Image
+          width={48}
+          height={48}
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          src="/apple.avif"
+          alt="Apple Maps"
+        />
+      </Link>
+
+      <Link href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+        <Image
+          width={48}
+          height={48}
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          src="/google.avif"
+          alt="Google Maps"
+        />
+      </Link>
+
+      <Link href={wazeUrl} target="_blank" rel="noopener noreferrer">
+        <Image
+          width={48}
+          height={48}
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          src="/waze.avif"
+          alt="Waze"
+        />
+      </Link>
     </div>
   );
 }
