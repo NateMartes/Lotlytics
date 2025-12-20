@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Navigation } from "@/components/navigation-components"
+import { Footer } from "@/components/footer-components";
 import "@/app/globals.css";
 import "leaflet/dist/leaflet.css";
 
@@ -15,10 +17,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
-        {children}
-      </body>
-    </html>
+    <>
+      <Navigation/>
+      {children}
+      <Footer/>
+    </>
   );
 }

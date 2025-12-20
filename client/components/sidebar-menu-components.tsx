@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Sidebar,
   SidebarContent,
@@ -9,10 +11,34 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { MapPlus, Users } from "lucide-react";
+import {
+  Home,
+  LogOut, 
+  MapPlus, 
+  Users 
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { logoutUser } from "@/components/user-components";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export function DashboardMenu() {
+  
+  const { refreshUser } = useAuth();
+  const router = useRouter();
+  
+  const handleUserLogout = () => {
+    logoutUser(
+      async () => {
+        await refreshUser();
+        router.push("/");
+      },
+      (error: Error) => {
+        console.error(error);
+      },
+    );
+  };
+  
   return (
     <Sidebar className="border-blue-950">
       <SidebarHeader>
@@ -35,31 +61,40 @@ export function DashboardMenu() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <a
+                <Link
+                  className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all"
+                  href="/admin/dashboard"
+                >
+                  <Home />
+                  My Dashboard
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link
                   className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all"
                   href="/admin/dashboard/create-lot"
                 >
                   <MapPlus />
                   Create Lot
-                </a>
+                </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <a
+                <Link
                   className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all"
                   href="/admin/dashboard/join-group"
                 >
                   <Users />
                   Join a Parking Group
-                </a>
+                </Link>
               </SidebarMenuItem>
-              {/*
-                            <SidebarMenuItem>
-                                <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><UserPlus />Add A User to my Parking Group</a>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <a className="flex gap-2 place-items-center p-2 hover:bg-primary/30 rounded-lg transition-all" href="/admin/dashboard/create-lot"><LogOut />Log Out</a>
-                            </SidebarMenuItem>
-                            */}
+              <SidebarMenuItem>
+                <span className="flex gap-2 place-items-center p-2 cursor-pointer hover:bg-primary/30 rounded-lg transition-all" 
+                    onClick={() => handleUserLogout()}
+                  >
+                    <LogOut />
+                    Log Out
+                  </span>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

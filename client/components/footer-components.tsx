@@ -24,16 +24,16 @@ interface FooterProps {
   }[];
 }
 
-const Footer = ({
+export const Footer = ({
   logo = {
     src: "/Lotlytics.avif",
     alt: "Lotlytics Logo",
     title: "lotlytics.com",
     url: "http://localhost:3000",
   },
-  tagline = "All Your Parking Lots, Everywhere.",
+  tagline = "Travel Better, Park Smarter.",
   menuItems = [],
-  copyright = "© 2025 Put Something Here. All rights reserved.",
+  copyright = "© 2025 Lotlytics. All rights reserved.",
   bottomLinks = [
     { text: "Terms and Conditions", url: "#" },
     { text: "Privacy Policy", url: "#" },
@@ -89,5 +89,3 @@ const Footer = ({
     </section>
   );
 };
-
-export { Footer };

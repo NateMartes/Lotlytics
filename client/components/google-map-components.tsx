@@ -9,7 +9,7 @@ interface MapProps {
   height?: string | number;
 }
 
-const Map: React.FC<MapProps> = ({
+export const Map: React.FC<MapProps> = ({
   street,
   city,
   state,
@@ -35,5 +35,3 @@ const Map: React.FC<MapProps> = ({
     </div>
   );
 };
-
-export { Map };

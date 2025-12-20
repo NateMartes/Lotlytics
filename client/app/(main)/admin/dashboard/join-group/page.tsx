@@ -2,8 +2,6 @@
 import { useEffect, useState, useRef, FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Navigation } from "@/components/nav";
-import { Footer } from "@/components/footer";
 import {
   getAllGroups,
   getAllUserGroups,
@@ -70,8 +68,7 @@ export default function JoinGroupPage() {
   };
 
   return (
-    <>
-      <Navigation />
+    <div className="flex flex-col p-4">
       <div className="w-full flex justify-center">
         <div className="text-left p-4 flex flex-col">
           <h1 className="text-2xl lg:text-3xl md:w-125 mb-4">Join a Group</h1>
@@ -158,7 +155,6 @@ export default function JoinGroupPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      <Footer />
-    </>
+    </div>
   );
 }

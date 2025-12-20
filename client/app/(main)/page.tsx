@@ -5,8 +5,6 @@ import { FormEvent, useRef, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Navigation } from "@/components/nav";
-import { Footer } from "@/components/footer";
 import { LotListHandle } from "@/types/lot";
 
 export default function Home() {
@@ -31,7 +29,6 @@ export default function Home() {
 
   return (
     <>
-      <Navigation />
       <div className="flex flex-col place-items-center mt-20 text-2xl lg:text-3xl gap-4">
         <p className="text-center">Travel Better, Park Smarter.</p>
         <Card className="md:min-w-2xl">
@@ -68,7 +65,6 @@ export default function Home() {
           <LotList ref={lotListRef} searching={searching} />
         </div>
       </div>
-      <Footer />
     </>
   );
 }

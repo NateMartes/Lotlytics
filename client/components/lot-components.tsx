@@ -19,8 +19,18 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogTitle,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Image from "next/image";
-import { Map } from "@/components/google-map";
+import { Map } from "@/components/google-map-components";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -126,6 +136,11 @@ export function getAllLots(
 
 interface LotItemProps {
   lot: Lot;
+  onSelect: (lot: Lot) => void;
+}
+
+interface LotItemInDialogProps {
+  lot: Lot;
 }
 
 function getLotMapLinks(lot: Lot) {
@@ -193,7 +208,7 @@ function fixLotName(lotName: string) {
   }
 }
 
-export function LotItem({ lot }: LotItemProps) {
+function LotItem({ lot, onSelect }: LotItemProps) {
   const { text, color } = getLotLevel(lot.currentVolume, lot.capacity);
   return (
     <Card className="w-full h-full flex flex-col justify-between overflow-hidden">
@@ -208,9 +223,17 @@ export function LotItem({ lot }: LotItemProps) {
                 {text}
               </span>
             </div>
-            <a href="#" className="text-muted-foreground hover:text-foreground">
-              <ArrowUpRight size={20} />
-            </a>
+              <Button variant="default"
+                className="text-muted-foreground hover:text-foreground bg-white hover:bg-white"
+                onClick={() => {
+                  if (onSelect != undefined) {
+                    onSelect(lot);
+                  }
+                  document.getElementById("viewLotDialog")?.click();
+                }}
+              >
+                <ArrowUpRight size={20} />
+              </Button>
           </div>
           <div className="my-2">
             <Map
@@ -232,6 +255,38 @@ export function LotItem({ lot }: LotItemProps) {
       </CardContent>
       <CardFooter>{getLotMapLinks(lot)}</CardFooter>
     </Card>
+  );
+}
+
+function LotItemInDialog({ lot }: LotItemInDialogProps) {
+  const { text, color } = getLotLevel(lot.currentVolume, lot.capacity);
+  return (
+    <>
+      <div className="w-full h-full flex flex-col justify-between overflow-hidden">
+        <div className="my-2">
+          <Map
+            street={lot.street}
+            city={lot.city}
+            state={lot.state}
+            zip={lot.zip}
+          />
+        </div>
+        <div className="flex gap-4">
+          <span
+            className={`inline-block px-2 py-1 rounded-full w-fit text-xs font-medium ${color} text-white`}
+          >
+            {text}
+          </span>
+          <p className="text-sm text-muted-foreground font-medium">
+            {lot.currentVolume} / {lot.capacity} spots taken
+          </p>
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        {lot.street}, {lot.city}, {lot.state}, {lot.zip}
+      </p>
+      <DialogFooter>{getLotMapLinks(lot)}</DialogFooter>
+    </>
   );
 }
 
@@ -259,7 +314,8 @@ function LotListComponent(
   const [lots, setLots] = useState<Lot[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<LotFilterOption>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
-
+  const [currentLot, setCurrentLot] = useState<Lot | null>(null);
+  
   useImperativeHandle(
     ref,
     () => ({
@@ -315,7 +371,6 @@ function LotListComponent(
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-
             <span className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages}
             </span>
@@ -392,9 +447,21 @@ function LotListComponent(
         <div className="w-full max-w-6xl flex flex-col gap-6 p-5">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentDisplayedLots.map((lot: Lot) => (
-              <LotItem key={lot.id} lot={lot} />
+              <LotItem key={lot.id} lot={lot} onSelect={(lot: Lot) => {
+                setCurrentLot(lot)
+              }} />
             ))}
           </div>
+          <Dialog>
+            <DialogTrigger
+              className="hidden"
+              id="viewLotDialog"
+            ></DialogTrigger>
+            <DialogContent>
+              <DialogTitle className="font-normal text-xl md:text-2xl">{currentLot ? currentLot.name : "Unknown Lot"}</DialogTitle>
+              {currentLot ? <LotItemInDialog lot={currentLot}/>: null}
+            </DialogContent>
+          </Dialog>
         </div>
       ) : null}
       {getPageControls()}
