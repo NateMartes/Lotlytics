@@ -17,8 +17,8 @@ Edge devices count vehicles in real time; the web app shows live availability an
 ## Quick Start (local)
 
 ```bash
-git clone <repo>
-cd lotlytics
+git clone https://github.com/NateMartes/Lotlytics.git
+cd Lotlytics
 docker compose up        # spins up client, api, postgres, dynamodb-local
 ```
 
@@ -165,7 +165,7 @@ docker compose up
 ## 6. API Documentation (`./api-docs`)
 
 ```bash
-docker compose up   # serves Swagger UI on localhost:8082
+docker compose up   # serves Swagger UI on localhost:6601
 ```
 
 Generate a static site:
