@@ -1,1 +1,1 @@
-export const API_URL = "http://localhost/api/v1";
+export const API_URL = "https://lotlytics-api.nathanielmartes.com/api/v1";

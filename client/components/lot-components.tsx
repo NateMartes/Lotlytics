@@ -31,8 +31,7 @@ import Link from "next/link";
 import { Map } from "@/components/google-map-components";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
-
-const API_BASE_PATH = "http://localhost/api/v1/";
+import { API_URL } from "@/types/url";
 
 /**
  * The postLot function creates a new lot on the backend.
@@ -59,7 +58,7 @@ export function postLot(
   callback: (response: JSON) => void,
   errorCallback: (e: Error) => void,
 ) {
-  const url = API_BASE_PATH + `lot?groupId=${groupId}`;
+  const url = API_URL + `lot?groupId=${groupId}`;
   const payload = {
     name: name,
     capacity: capacity,
@@ -99,7 +98,7 @@ export function getAllLots(
   callback: (l: Lot[]) => void,
   errorCallback: (e: Error) => void,
 ) {
-  const url = API_BASE_PATH + "lot";
+  const url = API_URL + "lot";
   fetch(url)
     .then((res: Response) => {
       if (!res.ok) {
