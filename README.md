@@ -1,200 +1,210 @@
-# Lotlytics - Travel Better, Park Smarter
+# Lotlytics – Travel Better, Park Smarter
 
-Visit the site - https://lotlytics.nathanielmartes.com/
+[![Last Commit](https://img.shields.io/github/last-commit/NateMartes/lotlytics)](https://github.com/NateMartes/lotlytics/commits)
+[![License](https://img.shields.io/github/license/NateMartes/lotlytics)](LICENSE)
+![Next.js](https://img.shields.io/badge/Next.js-000?logo=next.js&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=spring-boot&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+| Live demo | API docs | API endpoint |
+|-----------|----------|--------------|
+| [lotlytics.nathanielmartes.com](https://lotlytics.nathanielmartes.com) | [lotlytics-api-docs.pages.dev](https://lotlytics-api-docs.pages.dev) | [lotlytics-api.nathanielmartes.com](https://lotlytics-api.nathanielmartes.com) |
 
-View the docs - https://lotlytics-api-docs.pages.dev/
+Lotlytics is a cloud-native parking-intelligence platform.  
+Edge devices count vehicles in real time; the web app shows live availability and turn-by-turn directions so drivers can plan trips and skip the circling.
 
-View the API - https://lotlytics-api.nathanielmartes.com/
+---
 
-**Lotlytics** is a web application that allows users to create and view parking lots from different services to plan their trips and reduce overall stress.  
+## Quick Start (local)
 
-Lotlytics aggregates the volume of vehicles in each lot and makes the information readily available using the cloud.  
-
-Edge devices are deployed in parking lots to keep track of vehicles, and the volume data is updated accordingly.  
-Users can then view the Lotlytics web application to discover parking lots and get directions to them.
-
-## Running, Building, and Deploying Services
-
-You can test Lotlytics locally with `docker`:
 ```bash
-docker compose up
+git clone <repo>
+cd lotlytics
+docker compose up        # spins up client, api, postgres, dynamodb-local
 ```
 
-The agent must be started up seperately with `docker` or just locally.
+The edge-agent is packaged separately—run it locally or in its own container.
 
-### Main Website `./client`
+---
 
-The main website uses NextJS, so you can use `npm` to run the website in a 
-development environment from the `./client` directory:
+## Service Overview
+
+| Service | Tech stack | Local dev | Build artifact | Deploy target |
+|---------|------------|-----------|----------------|---------------|
+| **Client** | Next.js | `npm run dev` | `npm run build` → `./out` | Vercel |
+| **API** | Spring Boot | `./mvnw spring-boot:run` | `./mvnw package` → `.jar` | AWS Lambda (SAM) |
+| **SQL DB** | PostgreSQL | `docker compose up` | n/a | RDS (CloudFormation) |
+| **Events DB** | DynamoDB | `docker compose up` | n/a | DynamoDB (CloudFormation) |
+| **Edge Agent** | Python 3 + YOLOv8 | `python3 main.py` | Docker image | Device or ECS |
+| **API Docs** | Swagger UI / Redoc | `docker compose up` | static HTML | Any static host |
+
+---
+
+## 1. Client (`./client`)
 
 ```bash
-npm run dev
+npm i
+npm run dev        # http://localhost:3000
+npm run build      # export to ./out
 ```
 
-For building the website, you can use `npm` again:
+Deploys to Vercel; no CloudFormation needed.
+
+---
+
+## 2. API (`./api`)
+
 ```bash
-npm run build
-```
-
-which will store the built website in the `./client/out` directory.
-You can also use `docker` if wanted:
-```bash
-docker compose up
-```
-
-Deploying is done using Vercel since this is a NextJS app, so there is not CloudFormation template
-for this service.
-
-### Lotlytics API `./api`
-
-The API uses Spring Boot and Maven so you can construct a package `.jar` file for it
-by executing in the current directory:
-```bash
-./mvnw install
 ./mvnw clean package
+java -jar target/lotlytics-*.jar
 ```
 
-Running can be done using maven aswell:
-```bash
-./mvnw spring-boot:run
-```
+SAM deployment:
 
-And also docker too:
-```bash
-docker compose up
-```
-
-Project configuration can be viewed at `./api/src/main/resources/application-properties`.
-There is also configuration files for `container` and `production` environments which are set by `SPRING_PROFILES_ACTIVE`.
-
-Deploying is done to AWS using the Severless Application Model to deploy a Lambda fucntion for the API:
 ```bash
 sam build --no-use-container
-sam deploy \
---stack-name lotlytics-api \
---parameter-overrides \
-DatabaseUrl=${LOTLYTICS_DB_ENDPOINT} \
-DatabaseUsername=${LOTLYTICS_DB_USERNAME} \
-DatabasePassword=${LOTLYTICS_DB_PASSWORD} \
-DynamoDBTable=${LOTLYTICS_DB_EVENTS_TABLE_NAME} \
-CorsAllowedOrigin=${LOTLYTICS_SITE_ORIGIN}
+sam deploy --stack-name lotlytics-api \
+  --parameter-overrides \
+    DatabaseUrl=$LOTLYTICS_DB_ENDPOINT \
+    DatabaseUsername=$LOTLYTICS_DB_USERNAME \
+    DatabasePassword=$LOTLYTICS_DB_PASSWORD \
+    DynamoDBTable=$LOTLYTICS_DB_EVENTS_TABLE_NAME \
+    CorsAllowedOrigin=$LOTLYTICS_SITE_ORIGIN
 ```
 
-**Note**: The `DatabaseURL` paramter is the full JDBC url that the JDBC API will use to try and connect to the SQL database. If your database does not exist, it will be very, very slow.
-**Note**: When deploying the API stack to AWS for the first time, the domain name attached to the API will get a API Gateway domain name that you must add to your DNS provider's CNAME record.
+**Notes**  
+- `DatabaseUrl` must be a full JDBC URL; if the DB does not exist the first start is very slow.  
+- First deploy creates an API-Gateway domain—add the supplied CNAME to your DNS. You can find this domain name in the AWS console for instance.
 
-### Lotlytics SQL Database `./database/postgres`
+---
 
-Lotlytics uses PostgreSQL by default, by any JDBC applicable database can be used.
-Testing the database can be done with docker:
-```bash
-docker compose up
-```
-Deploying is done using AWS CloudFormation:
-```bash
-aws cloudformation deploy \
---stack-name lotlytics-db \
---template ./template.yml \
---parameter-overrides \
-DBUser=${LOTLYTICS_DB_USERNAME} \
-DBPassword=${LOTLYTICS_DB_PASSWORD} \
-VPCCidrBlock=${LOTLYTICS_DB_VPC_CIDR_BLOCK} \
-Subnet1CidrBlock=${LOTLYTICS_DB_SUBNET_1_CIDR_BLOCK} \
-Subnet2CidrBlock=${LOTLYTICS_DB_SUBNET_2_CIDR_BLOCK}
-```
+## 3. PostgreSQL (`./database/postgres`)
 
-**Note**: This current CloudFormation file creates a database with a **PUBLIC** IP address. For better security, consider setting up a NAT Gateway to access your database and remove the public IP address.
+Local:
 
-The database can then be initialize using a sql client like `psql` for PostgreSQL:
-```bash
-PGPASSWORD="${LOTLYTICS_DB_PASSWORD}" psql -h "${LOTLYTICS_DB_DOMAIN}" -U "${LOTLYTICS_DB_USERNAME}" -d lotlytics-db -f init_db.sql 
-```
-### Lotlytics Events Database `./database/dynamodb`
-
-As of now, Lotlytics is tightly couple to the DynamoDB database. You can test the schema using `docker`:
 ```bash
 docker compose up
 ```
 
-Deploying is done using AWS CloudFormation:
+Production (public IP **not** recommended):
+
 ```bash
 aws cloudformation deploy \
---stack-name lotlytics-events-db \
---template ./database/dynamodb/template.yml \
---parameter-overrides \
-TableName=${LOTLYTICS_DB_EVENTS_TABLE_NAME}
+  --stack-name lotlytics-db \
+  --template ./template.yml \
+  --parameter-overrides \
+    DBUser=$LOTLYTICS_DB_USERNAME \
+    DBPassword=$LOTLYTICS_DB_PASSWORD \
+    VPCCidrBlock=$LOTLYTICS_DB_VPC_CIDR_BLOCK \
+    Subnet1CidrBlock=$LOTLYTICS_DB_SUBNET_1_CIDR_BLOCK \
+    Subnet2CidrBlock=$LOTLYTICS_DB_SUBNET_2_CIDR_BLOCK
 ```
 
-### Lotlytics Edge Device Agent
+Initialise schema:
 
-The edge device agent requires `python3` and some camera device at `/dev/video<X>`.
-You can run the device locally using `python3`:
 ```bash
-pip install -r requirements.text
+PGPASSWORD=$LOTLYTICS_DB_PASSWORD \
+psql -h $LOTLYTICS_DB_DOMAIN -U $LOTLYTICS_DB_USERNAME -d lotlytics-db -f init_db.sql
+```
+
+**Security**  
+Put the RDS instance in private subnets + NAT Gateway for production.
+
+---
+
+## 4. DynamoDB Events Table (`./database/dynamodb`)
+
+```bash
+aws cloudformation deploy \
+  --stack-name lotlytics-events-db \
+  --template ./database/dynamodb/template.yml \
+  --parameter-overrides TableName=$LOTLYTICS_DB_EVENTS_TABLE_NAME
+```
+
+---
+
+## 5. Edge Agent (`./agent`)
+
+Requirements: Python ≥3.8, camera at `/dev/video0`.
+
+```bash
+pip install -r requirements.txt
 python3 main.py
 ```
 
-The edge device was not intended to use GPUs for object detection, so the Pytorch's GPU packages are excluded.
-If you have a GPU then you can remove:
-```
---index-url https://download.pytorch.org/whl/cpu
-```
+Docker (mounts `/dev/video0` and `/dev/video1`):
 
-from the `requirements.txt` file.
-
-If you would like to use `docker` you can:
 ```bash
 docker compose up
 ```
 
-The `docker-compose.yml` file by default mounts `/dev/video0` and `/dev/video1`.
+### Configuration (`config.toml`)
 
-Configuring the agent can be done via the `config.toml` file
+| Key | Purpose |
+|-----|---------|
+| `mode` | `production` or `testing` |
+| `valid_objects` | COCO classes to track (default: `["car", "truck", "bus"]`) |
+| `confidence_percentage` | Detection threshold |
+| `keep_alive_frames` | Frames before object forgotten |
+| `minimum_frames_before_detection` | Frames before object acknowledged |
+| `iou_threshold` | Min IOU to merge boxes |
+| `line_start`, `line_gap` | Virtual counter lines |
+| `entrance_side`, `exit_side` | `top`, `bottom`, `left`, `right` (camera POV) |
+| `data_server` | HTTPS endpoint for counts |
+| `group`, `lot` | Lotlytics identifiers |
 
-#### Agent Configuration
+### MQTT (optional)
 
-- mode: production or testing
+| Key | Purpose |
+|-----|---------|
+| `broker_address` | MQTT host |
+| `broker_port` | MQTT port |
+| `topic` | Command topic (agent subscribes) |
 
-- valid_objects: Objects to be recongized. Objects can added from the COCO dataset https://docs.ultralytics.com/datasets/detect/coco/
+---
 
-- model_path: Where the model is store on the filesystem
+## 6. API Documentation (`./api-docs`)
 
-- confidence_percentage: Confidence percentage to accept objects at
-
-- keep_alive_frames: Keep alive frames are how many frames are allowed for the object not to be seen before it is forgotten
-
-- minimum_frames_before_detection: Miniumn frames before detection is how many frames before an object is acknowledged
-
-- iou_threshold: IOU Threshold is how different the objects should be before it is consider a new object
-
-- line_start: Line start is the pixel where the first line should start to record volume
-
-- line_gap: Line gap is the gap between the 2 lines. This means that if line 1 is at 100px, and the gap is 500, then line 2 would be at 600px
-
-- entrance_side: Which side of the camera the entrance is on (Entrance and exit sides should be determined from the Camera's POV)
-
-- exit_side: Which side of the camera the exit is on (Entrance and exit sides should be determined from the Camera's POV)
-
-- data_server: Location of where to send data to over https
-
-- group: The Lotlytics group this agent is apart of
-
-- lot: The lot id this agent is apart of
-
-#### Agent MQTT Configuration
-The Agent also doubles as an MQTT client. This is for configuration updates only.
-
-- broker_address: The address of the MQTT broker
-
-- broker_port: The port number of the MQTT broker
-
-- topic: The topic for the agent to listen for from the MQTT broker
-
-### Lotlytics API Documentation `./api-docs`
-
-The Lotlytics API Documentation site provides documentation for the API using an OpenAPI spec (`./swagger.yml`) generated from Swagger UI. You can view it with `docker`:
 ```bash
-docker compose up
+docker compose up   # serves Swagger UI on localhost:8082
 ```
 
-Deploy the docs site is quite simple, you can use a tool such as Redocly to read in an OpenAPI spec and return an HTML file.
+Generate a static site:
+
+```bash
+npx @redocly/cli build-docs swagger.yml
+```
+
+Host the resulting `redoc-static.html` anywhere.
+
+---
+
+## Environment Variables
+
+```bash
+LOTLYTICS_DB_ENDPOINT
+LOTLYTICS_DB_USERNAME
+LOTLYTICS_DB_PASSWORD
+LOTLYTICS_DB_EVENTS_TABLE_NAME
+LOTLYTICS_SITE_ORIGIN
+LOTLYTICS_DB_VPC_CIDR_BLOCK
+LOTLYTICS_DB_SUBNET_1_CIDR_BLOCK
+LOTLYTICS_DB_SUBNET_2_CIDR_BLOCK
+```
+
+---
+
+## Common Pitfalls
+
+1. **“500 when adding users to groups”**  
+   Ensure the `MEMBER` role exists within the database `roles` table.
+
+2. **First API request hangs**  
+   Double-check the JDBC URL; Spring will retry for minutes if the DB is unreachable. The Lambda function default timeout is ~5 seconds. Your database should exists before making any API requests.
+
+3. **Agent not counting**  
+   Verify the virtual counter lines overlap vehicle paths; adjust `line_start`/`line_gap`.
+
+4. **Public RDS**  
+   The supplied CloudFormation template creates a publicly accessible instance—lock it down before going live.
+
+---
