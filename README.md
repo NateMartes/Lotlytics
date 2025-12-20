@@ -34,7 +34,7 @@ The edge-agent is packaged separately—run it locally or in its own container.
 | **API** | Spring Boot | `./mvnw spring-boot:run` | `./mvnw package` → `.jar` | AWS Lambda (SAM) |
 | **SQL DB** | PostgreSQL | `docker compose up` | n/a | RDS (CloudFormation) |
 | **Events DB** | DynamoDB | `docker compose up` | n/a | DynamoDB (CloudFormation) |
-| **Edge Agent** | Python 3 + YOLOv8 | `python3 main.py` | Docker image | Device or ECS |
+| **Edge Agent** | Python 3 + YOLOv8 | `python3 main.py` | Docker image | Device |
 | **API Docs** | Swagger UI / Redoc | `docker compose up` | static HTML | Any static host |
 
 ---
